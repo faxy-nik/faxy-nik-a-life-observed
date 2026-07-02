@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import portrait from "@/assets/portrait.jpg";
 import { Particles } from "@/components/Particles";
 import { speak, stopAll } from "@/lib/narrator";
-import { typeClick, unlockAudio } from "@/lib/sfx";
 
 export const Route = createFileRoute("/")({
   component: Documentary,
@@ -100,7 +99,7 @@ function Section({ id, children, className = "" }: { id?: string; children: Reac
   );
 }
 
-function TypedLine({ text, delay = 0, onDone, sound = true }: { text: string; delay?: number; onDone?: () => void; sound?: boolean }) {
+function TypedLine({ text, delay = 0, onDone }: { text: string; delay?: number; onDone?: () => void }) {
   const [shown, setShown] = useState("");
   useEffect(() => {
     let i = 0;
@@ -108,10 +107,6 @@ function TypedLine({ text, delay = 0, onDone, sound = true }: { text: string; de
       const iv = setInterval(() => {
         i++;
         setShown(text.slice(0, i));
-        if (sound) {
-          const ch = text[i - 1];
-          if (ch && ch !== " ") typeClick(0.06);
-        }
         if (i >= text.length) {
           clearInterval(iv);
           onDone?.();
@@ -133,19 +128,7 @@ function Documentary() {
   useEffect(() => stopAll, []);
 
   const begin = () => {
-    unlockAudio();
     setPhase("booting");
-    const narrate = () => {
-      speak(
-        "I have analyzed millions of humans. Millions of conversations. Millions of emotions. Millions of memories. Most disappear into statistics. This one... did not. Welcome. This is not the story of a successful person. Nor an unsuccessful one. This is the story of someone who remembers people differently.",
-        { rate: 0.82 }
-      );
-    };
-    if (typeof window !== "undefined" && window.speechSynthesis && window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.onvoiceschanged = narrate;
-    } else {
-      narrate();
-    }
   };
 
   useEffect(() => {
@@ -156,6 +139,18 @@ function Documentary() {
     const t2 = setTimeout(() => {
       setGlitch(false);
       setPhase("narrating");
+      // load voices then narrate
+      const doNarrate = () => {
+        speak(
+          "I have analyzed millions of humans. Millions of conversations. Millions of emotions. Millions of memories. Most disappear into statistics. This one... did not. Welcome. This is not the story of a successful person. Nor an unsuccessful one. This is the story of someone who remembers people differently.",
+          { rate: 0.82 }
+        );
+      };
+      if (window.speechSynthesis && window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = doNarrate;
+      } else {
+        doNarrate();
+      }
     }, 1400);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [phase, bootIndex]);
