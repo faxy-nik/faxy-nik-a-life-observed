@@ -100,7 +100,7 @@ function Section({ id, children, className = "" }: { id?: string; children: Reac
   );
 }
 
-function TypedLine({ text, delay = 0, onDone }: { text: string; delay?: number; onDone?: () => void }) {
+function TypedLine({ text, delay = 0, onDone, sound = true }: { text: string; delay?: number; onDone?: () => void; sound?: boolean }) {
   const [shown, setShown] = useState("");
   useEffect(() => {
     let i = 0;
@@ -108,6 +108,10 @@ function TypedLine({ text, delay = 0, onDone }: { text: string; delay?: number; 
       const iv = setInterval(() => {
         i++;
         setShown(text.slice(0, i));
+        if (sound) {
+          const ch = text[i - 1];
+          if (ch && ch !== " ") typeClick(0.06);
+        }
         if (i >= text.length) {
           clearInterval(iv);
           onDone?.();
