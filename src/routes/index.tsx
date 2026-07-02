@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import portrait from "@/assets/portrait.jpg";
 import { Particles } from "@/components/Particles";
 import { speak, stopAll } from "@/lib/narrator";
+import { typeClick, unlockAudio } from "@/lib/sfx";
 
 export const Route = createFileRoute("/")({
   component: Documentary,
