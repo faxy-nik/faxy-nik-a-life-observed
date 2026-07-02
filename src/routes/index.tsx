@@ -156,18 +156,6 @@ function Documentary() {
     const t2 = setTimeout(() => {
       setGlitch(false);
       setPhase("narrating");
-      // load voices then narrate
-      const doNarrate = () => {
-        speak(
-          "I have analyzed millions of humans. Millions of conversations. Millions of emotions. Millions of memories. Most disappear into statistics. This one... did not. Welcome. This is not the story of a successful person. Nor an unsuccessful one. This is the story of someone who remembers people differently.",
-          { rate: 0.82 }
-        );
-      };
-      if (window.speechSynthesis && window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.onvoiceschanged = doNarrate;
-      } else {
-        doNarrate();
-      }
     }, 1400);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [phase, bootIndex]);
