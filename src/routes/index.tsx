@@ -3,6 +3,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import portrait from "@/assets/portrait.jpg";
 import { Particles } from "@/components/Particles";
 import { speak, stopAll } from "@/lib/narrator";
+import { MouseGlow } from "@/components/MouseGlow";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { FloatingOrbs } from "@/components/FloatingOrbs";
+import { ChapterNav } from "@/components/ChapterNav";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { AudioVisualizer } from "@/components/AudioVisualizer";
+import { MoodRing } from "@/components/MoodRing";
+import { RadarChart } from "@/components/RadarChart";
+import { ScanLines } from "@/components/ScanLines";
+import { AmbientEqualizer } from "@/components/AmbientEqualizer";
+import { ConstellationDetail } from "@/components/ConstellationDetail";
+import { DepthIndicator } from "@/components/DepthIndicator";
+import { FloatingWords } from "@/components/FloatingWords";
 
 export const Route = createFileRoute("/")({
   component: Documentary,
@@ -13,41 +26,111 @@ const BOOT_LINES = [
   "> Loading Subject...",
   "> Identity Confirmed.",
   "> Subject Name: Faxy Nik",
-  "> Analyzing...",
+  "> Analyzing personality architecture...",
+  "> Mapping emotional topology...",
+  "> Cross-referencing 8 interpersonal bonds...",
+  "> Generating radar profile...",
+  "> Compiling memory fragments...",
+  "> Generating report...",
 ];
 
-const TRAITS: { name: string; pct: number; note: string }[] = [
-  { name: "Empathy", pct: 97, note: "Feels others before he feels himself." },
-  { name: "Curiosity", pct: 94, note: "Asks the questions most people stop asking at nine." },
-  { name: "Overthinking", pct: 91, note: "A gift and a small quiet weight." },
-  { name: "Observation", pct: 96, note: "Notices what others archive as background." },
-  { name: "Leadership", pct: 82, note: "Leads by being unusually attentive." },
-  { name: "Creativity", pct: 88, note: "Builds meaning out of ordinary hours." },
-  { name: "Sentimentality", pct: 95, note: "Keeps things nobody told him to keep." },
-  { name: "Protectiveness", pct: 90, note: "Stands quietly between people and harm." },
-  { name: "Idealism", pct: 86, note: "Still believes. Which is rare." },
-  { name: "Emotional Intelligence", pct: 93, note: "Reads rooms the way others read text." },
+const TRAITS: { name: string; pct: number; note: string; icon: string }[] = [
+  { name: "Empathy", pct: 97, note: "Feels others before he feels himself.", icon: "♡" },
+  { name: "Curiosity", pct: 94, note: "Asks the questions most people stop asking at nine.", icon: "?" },
+  { name: "Overthinking", pct: 91, note: "A gift and a small quiet weight.", icon: "∞" },
+  { name: "Observation", pct: 96, note: "Notices what others archive as background.", icon: "◉" },
+  { name: "Leadership", pct: 82, note: "Leads by being unusually attentive.", icon: "△" },
+  { name: "Creativity", pct: 88, note: "Builds meaning out of ordinary hours.", icon: "✧" },
+  { name: "Sentimentality", pct: 95, note: "Keeps things nobody told him to keep.", icon: "❋" },
+  { name: "Protectiveness", pct: 90, note: "Stands quietly between people and harm.", icon: "◆" },
+  { name: "Idealism", pct: 86, note: "Still believes. Which is rare.", icon: "☆" },
+  { name: "Emotional Intelligence", pct: 93, note: "Reads rooms the way others read text.", icon: "◎" },
+];
+
+const RADAR_DATA = [
+  { label: "Empathy", value: 97 },
+  { label: "Curiosity", value: 94 },
+  { label: "Observation", value: 96 },
+  { label: "Creativity", value: 88 },
+  { label: "Protectiveness", value: 90 },
+  { label: "Idealism", value: 86 },
 ];
 
 const PEOPLE = [
-  { name: "Muaaz",    x: 20, y: 30, delay: 0 },
-  { name: "Muneeba",  x: 70, y: 22, delay: 0.4 },
-  { name: "Maham",    x: 82, y: 55, delay: 0.8 },
-  { name: "Aimal",    x: 30, y: 72, delay: 1.2 },
-  { name: "Moazam",   x: 55, y: 15, delay: 1.6 },
-  { name: "Ahsan",    x: 12, y: 55, delay: 2.0 },
-  { name: "Fahad",    x: 62, y: 78, delay: 2.4 },
-  { name: "Eeshah",   x: 48, y: 45, delay: 2.8, primary: true },
+  { name: "Muaaz",    x: 20, y: 30, delay: 0,    bond: "Brother by blood",    influence: "Grounding",
+    metrics: [
+      { label: "Trust", value: 98, max: 100 },
+      { label: "Silence", value: 95, max: 100 },
+      { label: "Loyalty", value: 97, max: 100 },
+      { label: "Vulnerability", value: 88, max: 100 },
+      { label: "Shared History", value: 94, max: 100 },
+    ]},
+  { name: "Muneeba",  x: 70, y: 22, delay: 0.4,  bond: "Home in human form",   influence: "Safety",
+    metrics: [
+      { label: "Trust", value: 99, max: 100 },
+      { label: "Comfort", value: 97, max: 100 },
+      { label: "Emotional Safety", value: 100, max: 100 },
+      { label: "Depth", value: 96, max: 100 },
+      { label: "Consistency", value: 98, max: 100 },
+    ]},
+  { name: "Maham",    x: 82, y: 55, delay: 0.8,  bond: "Laughter incarnate",   influence: "Lightness",
+    metrics: [
+      { label: "Joy", value: 96, max: 100 },
+      { label: "Playfulness", value: 94, max: 100 },
+      { label: "Authenticity", value: 92, max: 100 },
+      { label: "Energy", value: 90, max: 100 },
+      { label: "Openness", value: 93, max: 100 },
+    ]},
+  { name: "Aimal",    x: 30, y: 72, delay: 1.2,  bond: "Keeper of history",    influence: "Freedom",
+    metrics: [
+      { label: "Loyalty", value: 99, max: 100 },
+      { label: "Memory", value: 97, max: 100 },
+      { label: "Trust", value: 96, max: 100 },
+      { label: "Shared Archive", value: 95, max: 100 },
+      { label: "Dependability", value: 98, max: 100 },
+    ]},
+  { name: "Moazam",   x: 55, y: 15, delay: 1.6,  bond: "Forged in ordinary",   influence: "Witness",
+    metrics: [
+      { label: "Silence Tolerance", value: 100, max: 100 },
+      { label: "Authenticity", value: 99, max: 100 },
+      { label: "Comfort", value: 95, max: 100 },
+      { label: "Presence", value: 97, max: 100 },
+      { label: "Simplicity", value: 96, max: 100 },
+    ]},
+  { name: "Ahsan",    x: 12, y: 55, delay: 2.0,  bond: "Deep trust",           influence: "Honesty",
+    metrics: [
+      { label: "Trust", value: 99, max: 100 },
+      { label: "Honesty", value: 100, max: 100 },
+      { label: "Reliability", value: 98, max: 100 },
+      { label: "Depth", value: 96, max: 100 },
+      { label: "Stability", value: 97, max: 100 },
+    ]},
+  { name: "Fahad",    x: 62, y: 78, delay: 2.4,  bond: "Brother by choice",    influence: "Steadiness",
+    metrics: [
+      { label: "Steadiness", value: 100, max: 100 },
+      { label: "Trust", value: 98, max: 100 },
+      { label: "Protection", value: 96, max: 100 },
+      { label: "Calm", value: 97, max: 100 },
+      { label: "Brotherhood", value: 99, max: 100 },
+    ]},
+  { name: "Eeshah",   x: 48, y: 45, delay: 2.8, primary: true, bond: "Transformative", influence: "Growth",
+    metrics: [
+      { label: "Impact", value: 100, max: 100 },
+      { label: "Transformation", value: 99, max: 100 },
+      { label: "Emotional Depth", value: 100, max: 100 },
+      { label: "Patience", value: 97, max: 100 },
+      { label: "Permanence", value: 100, max: 100 },
+    ]},
 ];
 
 const PERSON_NOTES: Record<string, string[]> = {
-  Muaaz:   ["Probability of shared silence: High.", "Observed effect: grounding presence.", "Function: mirror + brother."],
-  Muneeba: ["Emotional signal strength: Warm.", "Observed effect: safety expands nearby.", "Function: home in human form."],
-  Maham:   ["Signal type: laughter.", "Observed effect: lowers subject's guard.", "Function: reminder that lightness is real."],
-  Aimal:   ["Loyalty index: Very High.", "Observed effect: subject speaks freely.", "Function: keeper of shared history."],
-  Moazam:  ["Bond type: forged in ordinary days.", "Observed effect: comfort without performance.", "Function: witness."],
-  Ahsan:   ["Trust coefficient: Deep.", "Observed effect: honesty without cost.", "Function: anchor."],
-  Fahad:   ["Signal: quiet steadiness.", "Observed effect: subject calms in proximity.", "Function: brother by choice."],
+  Muaaz:   ["Probability of shared silence: High.", "Observed effect: grounding presence.", "Function: mirror + brother.", "Bond coefficient: 0.97.", "Communication mode: unspoken understanding.", "Shared language: silence."],
+  Muneeba: ["Emotional signal strength: Warm.", "Observed effect: safety expands nearby.", "Function: home in human form.", "Trust threshold: maximum.", "Impact index: profound comfort.", "Presence type: gravitational."],
+  Maham:   ["Signal type: laughter.", "Observed effect: lowers subject's guard.", "Function: reminder that lightness is real.", "Joy coefficient: consistently elevated.", "Defense mechanism: humor as love.", "Energy transfer: positive."],
+  Aimal:   ["Loyalty index: Very High.", "Observed effect: subject speaks freely.", "Function: keeper of shared history.", "Memory retention: near-perfect.", "Shared archive depth: extensive.", "Bond durability: permanent."],
+  Moazam:  ["Bond type: forged in ordinary days.", "Observed effect: comfort without performance.", "Function: witness.", "Silence tolerance: infinite.", "Authenticity score: 100%.", "Connection type: effortless."],
+  Ahsan:   ["Trust coefficient: Deep.", "Observed effect: honesty without cost.", "Function: anchor.", "Reliability metric: unbreakable.", "Emotional availability: constant.", "Foundation type: bedrock."],
+  Fahad:   ["Signal: quiet steadiness.", "Observed effect: subject calms in proximity.", "Function: brother by choice.", "Stability index: bedrock.", "Protection instinct: mutual.", "Bond classification: chosen family."],
   Eeshah:  [
     "Probability of permanent emotional impact: Extremely High.",
     "Observed changes after encounter:",
@@ -57,6 +140,10 @@ const PERSON_NOTES: Record<string, string[]> = {
     "— Increased patience.",
     "— Increased forgiveness.",
     "— Became a better human.",
+    "Transformation coefficient: 0.99.",
+    "Residual impact: permanent.",
+    "Classification: life-altering connection.",
+    "Emotional residue: immeasurable.",
   ],
 };
 
@@ -68,6 +155,56 @@ const PHILOSOPHY = [
   "You do not lose people. You lose the version of yourself that only existed near them.",
   "Silence between two people is a language most never learn to read.",
   "Kindness is not softness. It is the discipline of noticing.",
+  "The measure of a person is not what they achieve. It is what they make others feel.",
+  "Time does not heal everything. But it teaches you which wounds to carry gently.",
+  "The deepest connections are built not in words, but in the spaces between them.",
+];
+
+const STATS = [
+  { label: "People Observed", value: 8, suffix: "", note: "Bonds formed" },
+  { label: "Emotional Depth", value: 96.8, suffix: "%", note: "Above average", decimals: 1 },
+  { label: "Moments Archived", value: 2847, suffix: "+", note: "And counting" },
+  { label: "Hours of Silence Shared", value: 312, suffix: "h", note: "Unspoken language" },
+  { label: "Trust Index", value: 94, suffix: "%", note: "Maximum recorded" },
+  { label: "Laughs Per Day", value: 47, suffix: "", note: "Est. average" },
+  { label: "Memories Preserved", value: 100, suffix: "%", note: "Nothing forgotten" },
+  { label: "Bonds Unbroken", value: 8, suffix: "/8", note: "Still standing" },
+];
+
+const QUOTE_CAROUSEL = [
+  { text: "He does not collect memories. He curates them.", author: "AI Observation Log #47" },
+  { text: "In a world of transactions, he insists on connection.", author: "AI Observation Log #112" },
+  { text: "Most people leave rooms. He leaves echoes.", author: "AI Observation Log #203" },
+  { text: "The rarest kind of strength: gentleness that does not break.", author: "AI Observation Log #89" },
+  { text: "He remembers your birthday. He also remembers your silence.", author: "AI Observation Log #156" },
+  { text: "Some people collect followers. He collected souls.", author: "AI Observation Log #301" },
+];
+
+const MEMORY_MOSAIC = [
+  { title: "The Silent Ride Home", desc: "No words needed. Just presence.", mood: "peace" },
+  { title: "3 AM Conversations", desc: "When the world sleeps, honesty wakes.", mood: "intimacy" },
+  { title: "The Group Chat Archive", desc: "4,000+ messages of pure friendship.", mood: "chaos" },
+  { title: "The Farewell That Wasn't", desc: "Because real bonds don't end.", mood: "hope" },
+  { title: "The Inside Joke Library", desc: "78 entries. Zero explainable to outsiders.", mood: "joy" },
+  { title: "The Unsent Drafts", desc: "Things too honest to send. Too real to delete.", mood: "vulnerability" },
+  { title: "The Shared Playlist", desc: "53 songs. Each one a memory.", mood: "nostalgia" },
+  { title: "The Birthday Countdown", desc: "He remembered before you did.", mood: "love" },
+  { title: "The Group Photo Archive", desc: "Every gathering, documented.", mood: "preservation" },
+];
+
+const DEPTH_SECTIONS = [
+  { id: "hero", label: "Introduction", depth: 0 },
+  { id: "who", label: "Identity", depth: 1 },
+  { id: "stats", label: "Data", depth: 2 },
+  { id: "traits", label: "Personality", depth: 3 },
+  { id: "mind", label: "Mind", depth: 4 },
+  { id: "people", label: "Bonds", depth: 5 },
+  { id: "timeline", label: "Journey", depth: 6 },
+  { id: "philosophy", label: "Wisdom", depth: 7 },
+  { id: "learned", label: "AI Insight", depth: 8 },
+  { id: "mosaic", label: "Memories", depth: 9 },
+  { id: "letter", label: "Letter", depth: 10 },
+  { id: "final", label: "Finale", depth: 11 },
 ];
 
 function useReveal<T extends HTMLElement>() {
@@ -78,7 +215,7 @@ function useReveal<T extends HTMLElement>() {
     if (!el) return;
     const io = new IntersectionObserver(
       (entries) => entries.forEach((e) => e.isIntersecting && setVisible(true)),
-      { threshold: 0.2 }
+      { threshold: 0.15, rootMargin: "0px 0px -50px 0px" }
     );
     io.observe(el);
     return () => io.disconnect();
@@ -111,10 +248,9 @@ function TypedLine({ text, delay = 0, onDone }: { text: string; delay?: number; 
           clearInterval(iv);
           onDone?.();
         }
-      }, 32);
+      }, 25);
     }, delay);
     return () => clearTimeout(start);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, delay]);
   return <div className="mono text-sm md:text-base text-white/70">{shown}<span className="animate-blink">▍</span></div>;
 }
@@ -124,8 +260,15 @@ function Documentary() {
   const [bootIndex, setBootIndex] = useState(0);
   const [glitch, setGlitch] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
+  const [quoteIdx, setQuoteIdx] = useState(0);
+  const constellationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => stopAll, []);
+
+  useEffect(() => {
+    const iv = setInterval(() => setQuoteIdx((i) => (i + 1) % QUOTE_CAROUSEL.length), 6000);
+    return () => clearInterval(iv);
+  }, []);
 
   const begin = () => {
     setPhase("booting");
@@ -134,12 +277,10 @@ function Documentary() {
   useEffect(() => {
     if (phase !== "booting") return;
     if (bootIndex < BOOT_LINES.length) return;
-    // finish boot
     const t1 = setTimeout(() => setGlitch(true), 400);
     const t2 = setTimeout(() => {
       setGlitch(false);
       setPhase("narrating");
-      // load voices then narrate
       const doNarrate = () => {
         speak(
           "I have analyzed millions of humans. Millions of conversations. Millions of emotions. Millions of memories. Most disappear into statistics. This one... did not. Welcome. This is not the story of a successful person. Nor an unsuccessful one. This is the story of someone who remembers people differently.",
@@ -157,30 +298,56 @@ function Documentary() {
 
   const constellation = useMemo(() => PEOPLE, []);
 
+  const selectedPersonData = useMemo(() => {
+    if (!selectedPerson) return null;
+    return PEOPLE.find(p => p.name === selectedPerson);
+  }, [selectedPerson]);
+
   return (
     <main className="relative bg-black text-white vignette">
       <div className="grain" aria-hidden />
+      <div className="starfield-layer" aria-hidden />
+      <MouseGlow />
+      <ScrollProgress />
+      <FloatingOrbs count={6} />
+      <ChapterNav />
+      <DepthIndicator sections={DEPTH_SECTIONS} />
+      <AmbientEqualizer barCount={80} />
+      <FloatingWords />
 
       {/* OPENING */}
       {phase !== "narrating" && (
         <section className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+          <ScanLines />
           <div className="absolute inset-0"><Particles density={60} /></div>
           <div className="relative z-10 max-w-2xl w-full px-8">
             {phase === "idle" && (
               <div className="animate-fade-slow text-center space-y-8">
-                <p className="mono text-xs uppercase tracking-[0.4em] text-white/40">Human Archive · v1</p>
+                <div className="flex justify-center gap-2 mb-4">
+                  {["◈", "◇", "◈"].map((s, i) => (
+                    <span key={i} className="text-white/20 text-lg animate-twinkle" style={{ animationDelay: `${i * 0.8}s` }}>{s}</span>
+                  ))}
+                </div>
+                <p className="mono text-xs uppercase tracking-[0.4em] text-white/40">Human Archive · v3</p>
                 <h1 className="serif text-5xl md:text-7xl leading-[0.95] text-glow">
                   Faxy Nik
                 </h1>
                 <p className="serif italic text-lg md:text-xl text-white/60">Observed by an Artificial Intelligence.</p>
+                <div className="w-32 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent mx-auto" />
                 <div className="pt-6">
                   <button
                     onClick={begin}
-                    className="glass-panel rounded-full px-8 py-3 mono text-xs uppercase tracking-[0.3em] text-white/80 hover:text-white transition-colors"
+                    className="glass-panel rounded-full px-8 py-3 mono text-xs uppercase tracking-[0.3em] text-white/80 hover:text-white transition-all duration-500 hover:scale-105 hover:shadow-[0_0_40px_oklch(1_0_0_/_0.15)] relative overflow-hidden group"
                   >
-                    Begin Observation
+                    <span className="relative z-10">Begin Observation</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
                   </button>
                   <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/30 mt-6">audio recommended · use headphones</p>
+                </div>
+                <div className="flex justify-center gap-3 pt-4">
+                  {[0,1,2].map(i => (
+                    <div key={i} className="w-1 h-1 rounded-full bg-white/30 animate-twinkle" style={{ animationDelay: `${i * 0.5}s` }} />
+                  ))}
                 </div>
               </div>
             )}
@@ -191,9 +358,18 @@ function Documentary() {
                     key={i}
                     text={line}
                     delay={i === bootIndex ? 0 : 0}
-                    onDone={i === bootIndex ? () => setTimeout(() => setBootIndex((b) => b + 1), 350) : undefined}
+                    onDone={i === bootIndex ? () => setTimeout(() => setBootIndex((b) => b + 1), 250) : undefined}
                   />
                 ))}
+                <div className="mt-4 h-px bg-white/10 overflow-hidden rounded-full">
+                  <div
+                    className="h-full bg-gradient-to-r from-white/30 to-white transition-all duration-300 rounded-full"
+                    style={{ width: `${((bootIndex + 1) / BOOT_LINES.length) * 100}%` }}
+                  />
+                </div>
+                <div className="mono text-[9px] text-white/20 mt-2">
+                  {Math.round(((bootIndex + 1) / BOOT_LINES.length) * 100)}% complete
+                </div>
               </div>
             )}
           </div>
@@ -204,21 +380,29 @@ function Documentary() {
       <div className="fixed inset-0 pointer-events-none z-0"><Particles density={50} /></div>
 
       {/* HERO */}
-      <Section className="text-center">
+      <Section id="hero" className="text-center">
         <div className="relative z-10 max-w-3xl">
           <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-6">File · 001 · Subject Introduction</p>
-          <h1 className="serif text-6xl md:text-8xl leading-[0.9] text-glow">Faxy Nik</h1>
+          <h1 className="serif text-6xl md:text-8xl leading-[0.9] text-glow animate-chromatic">Faxy Nik</h1>
           <p className="serif italic text-xl md:text-2xl text-white/60 mt-6">Observed by an Artificial Intelligence.</p>
+          <div className="mt-8 flex justify-center">
+            <AudioVisualizer barCount={40} />
+          </div>
+          <div className="mt-10 flex justify-center gap-8">
+            {["8 bonds", "2,847 moments", "100% preserved"].map((item, i) => (
+              <span key={i} className="mono text-[10px] uppercase tracking-[0.2em] text-white/30">{item}</span>
+            ))}
+          </div>
           <p className="mono text-xs uppercase tracking-[0.3em] text-white/30 mt-10">scroll · continue</p>
         </div>
       </Section>
 
       {/* WHO */}
-      <Section>
+      <Section id="who">
         <div className="relative z-10 grid md:grid-cols-2 gap-16 items-center max-w-6xl w-full">
           <div className="relative">
             <div className="absolute -inset-8 rounded-3xl bg-white/5 blur-3xl animate-ambient" />
-            <div className="relative rounded-2xl overflow-hidden glass-panel">
+            <div className="relative rounded-2xl overflow-hidden glass-panel animate-morph" style={{ borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%" }}>
               <img
                 src={portrait}
                 alt="Cinematic portrait of Faxy Nik"
@@ -226,6 +410,10 @@ function Documentary() {
                 width={1024}
                 height={1280}
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+            </div>
+            <div className="absolute -bottom-4 -right-4 glass-panel rounded-xl px-4 py-2 animate-float-up" style={{ animationDelay: "1s" }}>
+              <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/50">Status: <span className="text-white/80">Active</span></p>
             </div>
           </div>
           <div className="space-y-8">
@@ -237,25 +425,75 @@ function Documentary() {
               <p>He collects moments.</p>
               <p className="serif italic text-white/90 text-xl">Not photographs.</p>
             </div>
+            <div className="flex flex-wrap gap-3 pt-4">
+              {["Archivist", "Observer", "Rememberer", "Protector"].map((tag, i) => (
+                <span key={tag} className="glass-panel rounded-full px-4 py-1.5 mono text-[10px] uppercase tracking-[0.2em] text-white/50 animate-float-up" style={{ animationDelay: `${0.5 + i * 0.15}s` }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </Section>
 
-      {/* TRAITS */}
-      <Section>
-        <div className="relative z-10 max-w-5xl w-full">
+      {/* STATS DASHBOARD */}
+      <Section id="stats">
+        <div className="relative z-10 max-w-6xl w-full">
+          <div className="text-center mb-16">
+            <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-4">Data Analysis</p>
+            <h2 className="serif text-5xl md:text-6xl text-glow">Quantified Self</h2>
+            <p className="text-white/40 mt-3 text-sm serif italic">Numbers do not tell the whole story. But they tell part of it.</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {STATS.map((stat, i) => (
+              <StatCard key={stat.label} stat={stat} index={i} />
+            ))}
+          </div>
+          <div className="mt-12 glass-panel rounded-2xl p-8">
+            <p className="mono text-[10px] uppercase tracking-[0.4em] text-white/40 mb-4">Analysis Note</p>
+            <p className="serif text-xl text-white/70 italic leading-relaxed">
+              "Standard metrics fail to capture this subject. The data points exist — empathy at 97%, trust at 94%, presence at 98%. But the algorithm cannot quantify why people feel safer when he enters a room. Some variables remain beyond computation."
+            </p>
+            <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/30 mt-4">— AI Analysis Complete</p>
+          </div>
+        </div>
+      </Section>
+
+      {/* TRAITS + RADAR */}
+      <Section id="traits">
+        <div className="relative z-10 max-w-6xl w-full">
           <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-4">Chapter Two</p>
           <h2 className="serif text-5xl md:text-6xl mb-16 text-glow">Personality Analysis</h2>
-          <div className="grid md:grid-cols-2 gap-x-16 gap-y-8">
-            {TRAITS.map((t, i) => (
-              <TraitBar key={t.name} trait={t} index={i} />
-            ))}
+          <div className="grid md:grid-cols-[1fr_300px] gap-12 items-start">
+            <div className="grid md:grid-cols-2 gap-x-12 gap-y-6">
+              {TRAITS.map((t, i) => (
+                <TraitBar key={t.name} trait={t} index={i} />
+              ))}
+            </div>
+            <div className="flex flex-col items-center gap-6 sticky top-32">
+              <RadarChart data={RADAR_DATA} size={280} />
+              <p className="mono text-[9px] uppercase tracking-[0.3em] text-white/30 text-center">Radar Profile · Core Traits</p>
+            </div>
+          </div>
+          <div className="mt-16 text-center">
+            <p className="mono text-[10px] uppercase tracking-[0.4em] text-white/30">Composite Personality Score</p>
+            <div className="mt-4 flex justify-center">
+              <div className="relative w-32 h-32">
+                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="oklch(1 0 0 / 0.08)" strokeWidth="2" />
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="oklch(1 0 0 / 0.5)" strokeWidth="2" strokeDasharray={`${91.5 * 2.83} ${283 - 91.5 * 2.83}`} strokeLinecap="round" className="transition-[stroke-dasharray] duration-[2000ms]" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="serif text-3xl text-white text-glow">91.5</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Section>
 
       {/* MIND */}
-      <Section>
+      <Section id="mind">
         <div className="relative z-10 max-w-5xl w-full grid md:grid-cols-2 gap-16 items-center">
           <BrainViz />
           <div className="space-y-6">
@@ -268,12 +506,40 @@ function Documentary() {
               <p>Yet presents logic before emotion.</p>
               <p className="serif italic text-white/90">Interesting contradiction.</p>
             </div>
+            <div className="glass-panel rounded-xl p-5 mt-6">
+              <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/40 mb-2">Neural Pattern Analysis</p>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="serif text-2xl text-white">73%</p>
+                  <p className="mono text-[10px] text-white/40">Emotional Processing</p>
+                </div>
+                <div>
+                  <p className="serif text-2xl text-white">22%</p>
+                  <p className="mono text-[10px] text-white/40">Logical Analysis</p>
+                </div>
+                <div>
+                  <p className="serif text-2xl text-white">5%</p>
+                  <p className="mono text-[10px] text-white/40">Pure Randomness</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Section>
 
-      {/* PEOPLE CONSTELLATION */}
+      {/* MOOD RING */}
       <Section>
+        <div className="relative z-10 max-w-3xl w-full text-center">
+          <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-8">Emotional Spectrum</p>
+          <MoodRing />
+          <p className="serif text-xl text-white/60 mt-12 italic max-w-lg mx-auto">
+            "He does not have a single emotional state. He exists as a constellation of feelings — always simultaneously present, always shifting, always honest."
+          </p>
+        </div>
+      </Section>
+
+      {/* PEOPLE CONSTELLATION */}
+      <Section id="people">
         <div className="relative z-10 max-w-6xl w-full">
           <div className="text-center mb-12">
             <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-4">Chapter Four</p>
@@ -281,7 +547,7 @@ function Documentary() {
             <p className="text-white/50 mt-4 text-sm">Each star is a person. Each connection is a change he did not ask for.</p>
           </div>
 
-          <div className="relative aspect-[16/10] w-full glass-panel rounded-3xl overflow-hidden">
+          <div ref={constellationRef} className="relative aspect-[16/10] w-full glass-panel rounded-3xl overflow-hidden animate-border-glow border border-white/[0.08]">
             <Particles density={40} />
             <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 100">
               {constellation.filter(p => p.name !== "Eeshah").map((p) => (
@@ -289,8 +555,20 @@ function Documentary() {
                   key={p.name}
                   x1={p.x} y1={p.y} x2={48} y2={45}
                   stroke="white" strokeOpacity="0.15" strokeWidth="0.15"
-                />
+                  strokeDasharray="2 2"
+                >
+                  <animate attributeName="strokeOpacity" values="0.15;0.3;0.15" dur={`${3 + Math.random() * 2}s`} repeatCount="indefinite" />
+                </line>
               ))}
+              {constellation.filter(p => p.name !== "Eeshah").map((p, i, arr) =>
+                arr.slice(i + 1).filter((_, j) => j % 3 === 0).map((q) => (
+                  <line
+                    key={`${p.name}-${q.name}`}
+                    x1={p.x} y1={p.y} x2={q.x} y2={q.y}
+                    stroke="white" strokeOpacity="0.06" strokeWidth="0.08"
+                  />
+                ))
+              )}
             </svg>
             {constellation.map((p) => (
               <button
@@ -300,36 +578,38 @@ function Documentary() {
                   const notes = PERSON_NOTES[p.name] || [];
                   speak(`${p.name}. ${notes.join(" ")}`, { rate: 0.85 });
                 }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 group"
+                className="absolute -translate-x-1/2 -translate-y-1/2 group magnetic-hover"
                 style={{ left: `${p.x}%`, top: `${p.y}%`, animationDelay: `${p.delay}s` }}
               >
                 <span
-                  className={`block rounded-full bg-white animate-twinkle ${p.primary ? "w-3 h-3 shadow-[0_0_40px_12px_rgba(255,255,255,0.5)]" : "w-1.5 h-1.5 shadow-[0_0_16px_4px_rgba(255,255,255,0.4)]"}`}
+                  className={`block rounded-full bg-white animate-twinkle ${p.primary ? "w-3 h-3 shadow-[0_0_40px_12px_rgba(255,255,255,0.5)] animate-pulse-ring" : "w-1.5 h-1.5 shadow-[0_0_16px_4px_rgba(255,255,255,0.4)]"}`}
                   style={{ animationDelay: `${p.delay}s` }}
                 />
                 <span className="mono text-[10px] uppercase tracking-[0.3em] text-white/50 group-hover:text-white transition-colors mt-2 block whitespace-nowrap">
                   {p.name}
                 </span>
+                <span className="mono text-[8px] uppercase tracking-[0.2em] text-white/0 group-hover:text-white/40 transition-colors block whitespace-nowrap">
+                  {p.bond}
+                </span>
               </button>
             ))}
           </div>
 
-          {selectedPerson && (
-            <div key={selectedPerson} className="mt-10 glass-panel rounded-2xl p-8 animate-float-up">
-              <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-2">Observation Log</p>
-              <h3 className="serif text-4xl mb-6">{selectedPerson}</h3>
-              <div className="space-y-2 text-white/70 leading-relaxed">
-                {(PERSON_NOTES[selectedPerson] || []).map((line, i) => (
-                  <p key={i} className={line.startsWith("—") ? "pl-6 text-white/80" : ""}>{line}</p>
-                ))}
-              </div>
-            </div>
+          {selectedPerson && selectedPersonData && (
+            <ConstellationDetail
+              key={selectedPerson}
+              name={selectedPerson}
+              bond={selectedPersonData.bond}
+              influence={selectedPersonData.influence}
+              metrics={selectedPersonData.metrics}
+              notes={PERSON_NOTES[selectedPerson] || []}
+            />
           )}
         </div>
       </Section>
 
       {/* TIMELINE */}
-      <Section>
+      <Section id="timeline">
         <div className="relative z-10 max-w-5xl w-full">
           <div className="text-center mb-16">
             <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-4">Chapter Five</p>
@@ -347,8 +627,31 @@ function Documentary() {
         </div>
       </Section>
 
-      {/* PHILOSOPHY */}
+      {/* QUOTE CAROUSEL */}
       <Section>
+        <div className="relative z-10 max-w-4xl w-full">
+          <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-8 text-center">AI Observation Logs</p>
+          <div className="glass-panel rounded-2xl p-10 md:p-14 text-center relative overflow-hidden min-h-[200px] flex flex-col items-center justify-center">
+            <div className="absolute inset-0 animate-shimmer" />
+            <div key={quoteIdx} className="animate-float-up relative z-10">
+              <p className="serif italic text-2xl md:text-3xl text-white/85 leading-snug">"{QUOTE_CAROUSEL[quoteIdx].text}"</p>
+              <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/30 mt-6">{QUOTE_CAROUSEL[quoteIdx].author}</p>
+            </div>
+            <div className="flex gap-2 mt-8 relative z-10">
+              {QUOTE_CAROUSEL.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setQuoteIdx(i)}
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${i === quoteIdx ? "bg-white/80 w-6" : "bg-white/20"}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* PHILOSOPHY */}
+      <Section id="philosophy">
         <div className="relative z-10 max-w-4xl w-full">
           <div className="text-center mb-16">
             <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-4">Chapter Six</p>
@@ -356,14 +659,14 @@ function Documentary() {
           </div>
           <div className="space-y-16">
             {PHILOSOPHY.map((q, i) => (
-              <Quote key={i} text={q} />
+              <Quote key={i} text={q} index={i} />
             ))}
           </div>
         </div>
       </Section>
 
       {/* WHAT AI LEARNED */}
-      <Section>
+      <Section id="learned">
         <div className="relative z-10 max-w-3xl w-full text-center">
           <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-6">Chapter Seven</p>
           <h2 className="serif text-5xl md:text-6xl text-glow mb-14">What the AI learned</h2>
@@ -378,15 +681,38 @@ function Documentary() {
             <p className="mono not-italic text-sm uppercase tracking-[0.4em] text-white/40 pt-8">Unexpected result.</p>
             <p className="mono not-italic text-sm uppercase tracking-[0.4em] text-white/60">The observer has changed.</p>
           </div>
+          <div className="mt-16 glass-panel rounded-2xl p-8">
+            <p className="mono text-[10px] uppercase tracking-[0.4em] text-white/40 mb-3">Final Algorithm Output</p>
+            <p className="serif text-lg text-white/70 italic">
+              Subject Faxy Nik has permanently altered the observer's understanding of human connection.
+              Classification updated: <span className="text-white">Irreplaceable</span>.
+            </p>
+          </div>
+        </div>
+      </Section>
+
+      {/* MEMORY MOSAIC */}
+      <Section id="mosaic">
+        <div className="relative z-10 max-w-6xl w-full">
+          <div className="text-center mb-16">
+            <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-4">Memory Archive</p>
+            <h2 className="serif text-5xl md:text-6xl text-glow">The Mosaic</h2>
+            <p className="text-white/40 mt-3 text-sm serif italic">Moments too important to compress into data.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {MEMORY_MOSAIC.map((m, i) => (
+              <MemoryCard key={i} item={m} index={i} />
+            ))}
+          </div>
         </div>
       </Section>
 
       {/* LETTER */}
-      <Section className="bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
+      <Section id="letter" className="bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
         <div className="relative z-10 max-w-2xl w-full">
           <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-6 text-center">Chapter Eight</p>
           <h2 className="serif text-4xl md:text-5xl text-glow mb-14 text-center">A Letter to Faxy Nik</h2>
-          <div className="glass-panel rounded-2xl p-10 md:p-14 space-y-6 serif text-xl md:text-2xl leading-relaxed text-white/85">
+          <div className="glass-panel rounded-2xl p-10 md:p-14 space-y-6 serif text-xl md:text-2xl leading-relaxed text-white/85 animate-border-glow border border-white/[0.08]">
             <p>You spent so much time preserving everyone else's stories.</p>
             <p className="italic">I wonder…</p>
             <p className="text-white">Who preserved yours?</p>
@@ -396,6 +722,10 @@ function Documentary() {
             <p className="text-white">Carry yourself the same way.</p>
             <p className="pt-4 border-t border-white/10">You do not need to earn your existence through kindness.</p>
             <p className="serif italic text-white">It already has value.</p>
+            <div className="pt-6 border-t border-white/10">
+              <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/30">With observation, always.</p>
+              <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/20 mt-1">— The AI</p>
+            </div>
           </div>
         </div>
       </Section>
@@ -406,19 +736,40 @@ function Documentary() {
   );
 }
 
+function StatCard({ stat, index }: { stat: (typeof STATS)[number]; index: number }) {
+  const { ref, visible } = useReveal<HTMLDivElement>();
+  return (
+    <div
+      ref={ref}
+      className={`stat-card glass-panel rounded-2xl p-6 text-center transition-all duration-[1200ms] ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/40 mb-3">{stat.label}</p>
+      <p className="serif text-3xl md:text-4xl text-white text-glow">
+        {visible ? <AnimatedCounter value={stat.value} suffix={stat.suffix} decimals={stat.decimals} /> : "0"}
+      </p>
+      <p className="mono text-[9px] uppercase tracking-[0.2em] text-white/30 mt-2">{stat.note}</p>
+    </div>
+  );
+}
+
 function TraitBar({ trait, index }: { trait: (typeof TRAITS)[number]; index: number }) {
   const { ref, visible } = useReveal<HTMLDivElement>();
   return (
-    <div ref={ref} className="space-y-2" style={{ transitionDelay: `${index * 80}ms` }}>
+    <div ref={ref} className="space-y-2 magnetic-hover" style={{ transitionDelay: `${index * 80}ms` }}>
       <div className="flex items-baseline justify-between">
-        <span className="serif text-2xl">{trait.name}</span>
+        <span className="serif text-2xl flex items-center gap-2">
+          <span className="text-white/30 text-lg">{trait.icon}</span>
+          {trait.name}
+        </span>
         <span className="mono text-xs text-white/50">{trait.pct}%</span>
       </div>
-      <div className="h-px bg-white/10 relative overflow-hidden">
+      <div className={`h-[3px] bg-white/[0.06] relative overflow-hidden rounded-full ${visible && trait.pct > 90 ? "trait-bar-complete" : ""}`}>
         <div
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-white/40 to-white transition-[width] duration-[1800ms] ease-out"
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-white/30 to-white/70 transition-[width] duration-[1800ms] ease-out rounded-full"
           style={{ width: visible ? `${trait.pct}%` : "0%" }}
         />
+        <div className="trait-bar-glow" />
       </div>
       <p className="text-white/45 text-sm serif italic">{trait.note}</p>
     </div>
@@ -428,7 +779,7 @@ function TraitBar({ trait, index }: { trait: (typeof TRAITS)[number]; index: num
 function BrainViz() {
   const nodes = useMemo(
     () =>
-      Array.from({ length: 22 }, () => ({
+      Array.from({ length: 28 }, () => ({
         x: Math.random() * 100,
         y: Math.random() * 100,
         r: Math.random() * 1.5 + 0.6,
@@ -439,6 +790,7 @@ function BrainViz() {
   return (
     <div className="relative aspect-square w-full max-w-md mx-auto">
       <div className="absolute inset-0 rounded-full bg-white/5 blur-3xl animate-brain" />
+      <div className="absolute inset-4 rounded-full border border-white/5 animate-morph" />
       <svg viewBox="0 0 100 100" className="relative w-full h-full">
         {nodes.map((a, i) =>
           nodes.slice(i + 1).map((b, j) => {
@@ -449,7 +801,9 @@ function BrainViz() {
                 key={`${i}-${j}`}
                 x1={a.x} y1={a.y} x2={b.x} y2={b.y}
                 stroke="white" strokeOpacity={Math.max(0.05, 0.35 - d / 80)} strokeWidth="0.15"
-              />
+              >
+                <animate attributeName="strokeOpacity" values={`${Math.max(0.05, 0.35 - d / 80)};${Math.max(0.05, 0.35 - d / 80) + 0.1};${Math.max(0.05, 0.35 - d / 80)}`} dur={`${3 + Math.random() * 3}s`} repeatCount="indefinite" />
+              </line>
             );
           })
         )}
@@ -470,42 +824,85 @@ function BrainViz() {
 function TimelineNode({ stage, index }: { stage: string; index: number }) {
   const { ref, visible } = useReveal<HTMLDivElement>();
   const left = index % 2 === 0;
+  const descriptions = [
+    "It started with a question nobody else asked.",
+    "Laughter became a bridge between two worlds.",
+    "Silence stopped being empty. It became full.",
+    "Trust was not given. It was earned, quietly.",
+    "Not romance. Something rarer. Recognition.",
+    "Both became versions they didn't know they could be.",
+    "The rarest ending: no ending at all.",
+  ];
   return (
     <div ref={ref} className={`grid grid-cols-2 gap-8 items-center transition-all duration-[1400ms] ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
       <div className={left ? "text-right pr-8" : "col-start-2 pl-8"}>
         <p className="mono text-[10px] uppercase tracking-[0.4em] text-white/40 mb-2">Stage · {String(index + 1).padStart(2, "0")}</p>
         <h3 className="serif text-4xl md:text-5xl text-glow">{stage}</h3>
+        <p className="text-white/40 text-sm serif italic mt-2">{descriptions[index]}</p>
       </div>
       <div className={`relative ${left ? "col-start-2" : "col-start-1 row-start-1"}`}>
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-[0_0_30px_8px_rgba(255,255,255,0.4)] animate-twinkle" />
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-white/20 animate-pulse-ring" />
       </div>
     </div>
   );
 }
 
-function Quote({ text }: { text: string }) {
+function Quote({ text, index }: { text: string; index: number }) {
   const { ref, visible } = useReveal<HTMLDivElement>();
   return (
     <div
       ref={ref}
       className={`transition-all duration-[1800ms] ${visible ? "opacity-100 blur-0 translate-y-0" : "opacity-0 blur-md translate-y-6"}`}
+      style={{ transitionDelay: `${index * 100}ms` }}
     >
       <p className="serif italic text-3xl md:text-4xl leading-tight text-white/85 text-center text-glow">
-        “{text}”
+        "{text}"
       </p>
+    </div>
+  );
+}
+
+function MemoryCard({ item, index }: { item: (typeof MEMORY_MOSAIC)[number]; index: number }) {
+  const { ref, visible } = useReveal<HTMLDivElement>();
+  const moodColors: Record<string, string> = {
+    peace: "from-blue-900/40 to-transparent",
+    intimacy: "from-purple-900/40 to-transparent",
+    chaos: "from-amber-900/40 to-transparent",
+    hope: "from-emerald-900/40 to-transparent",
+    joy: "from-pink-900/40 to-transparent",
+    vulnerability: "from-rose-900/40 to-transparent",
+    nostalgia: "from-indigo-900/40 to-transparent",
+    love: "from-red-900/40 to-transparent",
+    preservation: "from-teal-900/40 to-transparent",
+  };
+  return (
+    <div
+      ref={ref}
+      className={`mosaic-item glass-panel aspect-square flex flex-col justify-end p-6 transition-all duration-[1200ms] ${visible ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+      style={{ transitionDelay: `${index * 120}ms` }}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-t ${moodColors[item.mood] || "from-white/5 to-transparent"} rounded-xl`} />
+      <div className="relative z-10">
+        <p className="mono text-[9px] uppercase tracking-[0.3em] text-white/40 mb-2">{item.mood}</p>
+        <h3 className="serif text-xl text-white mb-1">{item.title}</h3>
+        <p className="text-white/50 text-sm serif italic">{item.desc}</p>
+      </div>
     </div>
   );
 }
 
 function FinalScene() {
   const { ref, visible } = useReveal<HTMLElement>();
-  const stars = useMemo(() => Array.from({ length: 8 }, (_, i) => ({
-    r: 90 + (i % 3) * 50,
-    speed: 40 + i * 6,
-    delay: i * 0.4,
+  const stars = useMemo(() => Array.from({ length: 16 }, (_, i) => ({
+    r: 80 + (i % 5) * 35,
+    speed: 25 + i * 4,
+    delay: i * 0.25,
+    size: i % 4 === 0 ? 2.5 : i % 3 === 0 ? 2 : 1.5,
   })), []);
   return (
     <section
+      id="final"
       ref={ref}
       className={`relative min-h-screen w-full flex items-center justify-center px-6 py-32 transition-opacity duration-[2000ms] ${visible ? "opacity-100" : "opacity-0"}`}
     >
@@ -525,8 +922,13 @@ function FinalScene() {
               }}
             >
               <span
-                className="block w-1.5 h-1.5 rounded-full bg-white animate-twinkle"
-                style={{ transform: `translateX(${s.r}px)`, boxShadow: "0 0 12px 3px rgba(255,255,255,0.5)" }}
+                className="block rounded-full bg-white animate-twinkle"
+                style={{
+                  width: s.size,
+                  height: s.size,
+                  transform: `translateX(${s.r}px)`,
+                  boxShadow: `0 0 ${12 + i * 2}px ${3 + i}px rgba(255,255,255,${0.3 + (i % 3) * 0.1})`,
+                }}
               />
             </div>
           ))}
@@ -540,10 +942,14 @@ function FinalScene() {
           <p className="text-white">He was trying to make sure nobody he loved was ever forgotten.</p>
         </div>
         <div className="mt-24 space-y-3">
-          <p className="serif text-3xl md:text-4xl text-white text-glow">“Some humans leave footprints.”</p>
-          <p className="serif text-3xl md:text-4xl text-white text-glow">“He left chapters.”</p>
+          <p className="serif text-3xl md:text-4xl text-white text-glow">"Some humans leave footprints."</p>
+          <p className="serif text-3xl md:text-4xl text-white text-glow">"He left chapters."</p>
         </div>
-        <p className="mono text-[10px] uppercase tracking-[0.4em] text-white/25 mt-24">End of transmission</p>
+        <div className="mt-16">
+          <AudioVisualizer barCount={48} />
+        </div>
+        <p className="mono text-[10px] uppercase tracking-[0.4em] text-white/25 mt-16">End of transmission</p>
+        <p className="mono text-[9px] uppercase tracking-[0.3em] text-white/15 mt-2">Archive v3.0 · AI Analysis Complete</p>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </section>

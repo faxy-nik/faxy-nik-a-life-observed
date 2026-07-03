@@ -10,6 +10,7 @@ export function Particles({ density = 80 }: { density?: number }) {
     let raf = 0;
     let w = 0, h = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let mx = -1000, my = -1000;
 
     const resize = () => {
       w = canvas.clientWidth;
@@ -21,6 +22,13 @@ export function Particles({ density = 80 }: { density?: number }) {
     resize();
     window.addEventListener("resize", resize);
 
+    const onMouse = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      mx = e.clientX - rect.left;
+      my = e.clientY - rect.top;
+    };
+    window.addEventListener("mousemove", onMouse);
+
     const particles = Array.from({ length: density }, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
@@ -31,9 +39,41 @@ export function Particles({ density = 80 }: { density?: number }) {
       pa: Math.random() * Math.PI * 2,
     }));
 
+    const CONNECTION_DIST = 120;
+    const MOUSE_RADIUS = 180;
+
     const tick = () => {
       ctx.clearRect(0, 0, w, h);
+
+      // Draw connection lines between nearby particles
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < CONNECTION_DIST) {
+            const alpha = (1 - dist / CONNECTION_DIST) * 0.15;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+
       for (const p of particles) {
+        // Mouse repulsion
+        const dmx = p.x - mx;
+        const dmy = p.y - my;
+        const dm = Math.sqrt(dmx * dmx + dmy * dmy);
+        if (dm < MOUSE_RADIUS && dm > 0) {
+          const force = (MOUSE_RADIUS - dm) / MOUSE_RADIUS * 0.3;
+          p.x += (dmx / dm) * force;
+          p.y += (dmy / dm) * force;
+        }
+
         p.x += p.vx;
         p.y += p.vy;
         p.pa += 0.02;
@@ -52,6 +92,7 @@ export function Particles({ density = 80 }: { density?: number }) {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMouse);
     };
   }, [density]);
 
