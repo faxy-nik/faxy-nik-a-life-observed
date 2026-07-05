@@ -518,6 +518,20 @@ html { scroll-behavior: smooth; }
   pointer-events: none;
 }
 
+/* Emotional section transitions */
+html[data-current-emotion] { transition: background-color 3s ease-in-out; }
+html[data-current-emotion="curiosity"] { background-color: oklch(0.02 0.01 240) !important; }
+html[data-current-emotion="introspection"] { background-color: oklch(0.01 0.01 280) !important; }
+html[data-current-emotion="intimacy"] { background-color: oklch(0.03 0.02 340) !important; }
+html[data-current-emotion="nostalgia"] { background-color: oklch(0.02 0.01 30) !important; }
+html[data-current-emotion="contemplation"] { background-color: oklch(0.01 0.01 200) !important; }
+html[data-current-emotion="growth"] { background-color: oklch(0.02 0.02 150) !important; }
+html[data-current-emotion="preservation"] { background-color: oklch(0.02 0.01 100) !important; }
+html[data-current-emotion="love"] { background-color: oklch(0.03 0.02 0) !important; }
+html[data-current-emotion="acceptance"] { background-color: oklch(0.01 0 0) !important; }
+html[data-current-emotion="peace"] { background-color: oklch(0.01 0 0) !important; }
+html[data-current-emotion="observation"] { background-color: oklch(0.02 0.01 220) !important; }
+
 /* Starfield layer */
 .starfield-layer {
   position: fixed;

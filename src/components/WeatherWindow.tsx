@@ -1,6 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 
-type Weather = "sunrise" | "day" | "sunset" | "night" | "rain" | "cloudy" | "storm";
+type Weather = "sunrise" | "day" | "sunset" | "night" | "rain" | "cloudy" | "storm" | "aurora";
+
+const EMOTIONAL_WEATHER: Record<string, Weather> = {
+  hero: "sunset",
+  who: "day",
+  stats: "cloudy",
+  traits: "sunrise",
+  mind: "aurora",
+  people: "night",
+  timeline: "sunset",
+  philosophy: "aurora",
+  learned: "sunrise",
+  letter: "rain",
+  final: "night",
+};
 
 function getWeatherByHour(hour: number): Weather {
   if (hour >= 5 && hour < 8) return "sunrise";
@@ -31,8 +45,25 @@ const STARS = Array.from({ length: 30 }, () => ({ x: Math.random() * 100, y: Mat
 
 export function WeatherWindow() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [weather] = useState<Weather>(() => getWeatherByHour(new Date().getHours()));
+  const [weather, setWeather] = useState<Weather>(() => getWeatherByHour(new Date().getHours()));
   const frameRef = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = Object.keys(EMOTIONAL_WEATHER);
+      for (const sectionId of sections) {
+        const el = document.getElementById(sectionId);
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.5 && rect.bottom > window.innerHeight * 0.3) {
+          setWeather(EMOTIONAL_WEATHER[sectionId]);
+          return;
+        }
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -77,6 +108,7 @@ export function WeatherWindow() {
         case "rain": gradient.addColorStop(0, "#4a4a5a"); gradient.addColorStop(1, "#2a2a3a"); break;
         case "cloudy": gradient.addColorStop(0, "#b0b0b0"); gradient.addColorStop(1, "#d0d0c0"); break;
         case "storm": gradient.addColorStop(0, "#1a1a2a"); gradient.addColorStop(1, "#2a2a3a"); break;
+        case "aurora": gradient.addColorStop(0, "#0a0a1a"); gradient.addColorStop(0.4, "#0a1a2a"); gradient.addColorStop(0.7, "#0a2a1a"); gradient.addColorStop(1, "#0a0a1a"); break;
       }
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, w, h);
@@ -163,6 +195,23 @@ export function WeatherWindow() {
             ctx.lineWidth = 1.5;
             ctx.stroke();
           }
+        }
+      }
+
+      if (weather === "aurora") {
+        for (let i = 0; i < 3; i++) {
+          const offset = frameRef.current * 0.002 + i * 2;
+          ctx.beginPath();
+          for (let x = 0; x < w; x += 3) {
+            const y = h * 0.2 + Math.sin(x * 0.008 + offset) * 20 + Math.sin(x * 0.015 + offset * 1.5) * 10;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.strokeStyle = `rgba(${100 + i * 50},255,${200 + i * 20},${0.05 + 0.03 * Math.sin(frameRef.current * 0.01 + i)})`;
+          ctx.lineWidth = 15 - i * 4;
+          ctx.globalAlpha = 0.3;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
         }
       }
 

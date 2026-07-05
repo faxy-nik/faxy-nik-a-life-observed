@@ -72,14 +72,48 @@ export function isFullyComplete(discovered: string[]): boolean {
   return discovered.length >= 20;
 }
 
-export function getTimeAwareness(): { isLateNight: boolean; hour: number } {
+export function getTimeAwareness(): { isLateNight: boolean; hour: number; isThreeAM: boolean; timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night" | "deepnight" } {
   const hour = new Date().getHours();
-  return { isLateNight: hour >= 23 || hour < 5, hour };
+  const isLateNight = hour >= 23 || hour < 5;
+  const isThreeAM = hour === 3;
+  let timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night" | "deepnight";
+  if (hour >= 5 && hour < 7) timeOfDay = "dawn";
+  else if (hour >= 7 && hour < 12) timeOfDay = "morning";
+  else if (hour >= 12 && hour < 17) timeOfDay = "afternoon";
+  else if (hour >= 17 && hour < 20) timeOfDay = "evening";
+  else if (hour >= 20 && hour < 23) timeOfDay = "night";
+  else timeOfDay = "deepnight";
+  return { isLateNight, hour, isThreeAM, timeOfDay };
 }
 
 export function isAfterMidnight(): boolean {
   const hour = new Date().getHours();
   return hour >= 0 && hour < 5;
+}
+
+export function isThreeAM(): boolean {
+  return new Date().getHours() === 3;
+}
+
+const EVOLUTION_KEY = "faxy-nik-evolution";
+
+export function getEvolutionLevel(): number {
+  try { return Number(localStorage.getItem(EVOLUTION_KEY)) || 0; } catch { return 0; }
+}
+
+export function incrementEvolution(): number {
+  const level = getEvolutionLevel() + 1;
+  try { localStorage.setItem(EVOLUTION_KEY, String(level)); } catch {}
+  return level;
+}
+
+export function getNarratorPersona(visits: number, evolution: number): "distant" | "curious" | "warm" | "intimate" | "philosophical" {
+  const total = visits + evolution;
+  if (total <= 2) return "distant";
+  if (total <= 4) return "curious";
+  if (total <= 7) return "warm";
+  if (total <= 12) return "intimate";
+  return "philosophical";
 }
 
 export function checkAndShowTenMinMessage(): boolean {

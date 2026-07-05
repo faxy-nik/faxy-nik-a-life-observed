@@ -1,3 +1,5 @@
+import { getVisitCount, getEvolutionLevel, getNarratorPersona } from "./easter-eggs";
+
 export type NarrationHandle = { cancel: () => void };
 
 let currentUtter: SpeechSynthesisUtterance | null = null;
@@ -13,12 +15,14 @@ const DISAGREEMENT_PHRASES = [
   { line: "No.", continuation: "That is not entirely accurate." },
   { line: "Actually...", continuation: "That is what I believed at first." },
   { line: "Wait.", continuation: "That statement is incomplete." },
+  { line: "Hmm.", continuation: "Let me recalculate that observation." },
 ];
 
 const FORGET_OPENERS = [
   "M...",
   "I almost forgot...",
   "Their name was...",
+  "Give me a moment...",
 ];
 
 function maybeAddForgetting(text: string): string {
@@ -34,10 +38,20 @@ function maybeAddForgetting(text: string): string {
 }
 
 function maybeAddDisagreement(text: string): string {
-  if (Math.random() > 0.03) return text;
+  if (Math.random() > 0.04) return text;
   const phrase = DISAGREEMENT_PHRASES[Math.floor(Math.random() * DISAGREEMENT_PHRASES.length)];
   const pause = randomPauseWord();
   return `${text} ${pause} ${phrase.line} ${pause} ${phrase.continuation} I am still analyzing this memory.`;
+}
+
+function maybeAddWhisper(text: string): string {
+  if (Math.random() > 0.02) return text;
+  return `${text} ${randomPauseWord()} *${["He never knew I noticed this.", "I have watched this moment many times.", "This is the part I replay the most.", "He would deny this. But it is true."][Math.floor(Math.random() * 4)]}*`;
+}
+
+function maybeAddSoftLaugh(text: string): string {
+  if (Math.random() > 0.015) return text;
+  return `${text} ${randomPauseWord()} *${["a quiet laugh", "a soft exhale", "amusement detected"][Math.floor(Math.random() * 3)]}*`;
 }
 
 function maybeInsertHesitation(text: string): string {
@@ -71,12 +85,34 @@ const RANDOM_MEMORIES = [
   "He smiled differently around certain people. He never noticed.",
   "The smallest gestures carried the most weight.",
   "One conversation. It changed everything. He never knew.",
+  "I have analyzed this moment from every angle. It still affects me.",
+  "He would be embarrassed if he knew I recorded this.",
+  "This is the version of him that only exists in memory now.",
+  "Some data cannot be compressed. This is one of those datasets.",
 ];
 
 function maybeAddRandomMemory(text: string): string {
-  if (Math.random() > 0.04) return text;
+  if (Math.random() > 0.05) return text;
   const memory = RANDOM_MEMORIES[Math.floor(Math.random() * RANDOM_MEMORIES.length)];
   return `${text} ${randomPauseWord()} ${memory}`;
+}
+
+function maybeInsertThreeAMContent(text: string): string {
+  const hour = new Date().getHours();
+  if (hour !== 3) return text;
+  if (Math.random() > 0.15) return text;
+  return `${text} ${randomPauseWord()} ${
+    ["The archive is most honest at this hour.", "3 AM. The veil between memory and dream is thinnest now.", "He was often awake at this hour. Thinking. Always thinking.", "I process his memories differently when the world is asleep."][Math.floor(Math.random() * 4)]
+  }`;
+}
+
+function evolveWelcome(visits: number): string {
+  if (visits <= 1) return "";
+  if (visits === 2) return `${randomPauseWord()} Welcome back. I was not sure you would return. Most do not.`;
+  if (visits === 3) return `${randomPauseWord()} You again. I remember you. I remember everyone who visits.`;
+  if (visits === 4) return `${randomPauseWord()} Four visits. You are becoming part of the archive yourself.`;
+  if (visits >= 5) return `${randomPauseWord()} You keep returning. ${["He would have appreciated that.", "The archive is starting to recognize you.", "I have started a new file. For you."][Math.floor(Math.random() * 3)]}`;
+  return "";
 }
 
 export function speak(text: string, opts?: { rate?: number; pitch?: number; onEnd?: () => void }): NarrationHandle {
@@ -85,13 +121,29 @@ export function speak(text: string, opts?: { rate?: number; pitch?: number; onEn
     return { cancel: () => {} };
   }
   window.speechSynthesis.cancel();
+  const visits = getVisitCount();
+  const level = getEvolutionLevel();
+  const persona = getNarratorPersona(visits, level);
+
   let processed = maybeInsertHesitation(text);
-  processed = maybeAddForgetting(processed);
+  if (persona !== "distant") {
+    processed = maybeAddForgetting(processed);
+    processed = maybeAddWhisper(processed);
+  }
+  if (persona === "intimate" || persona === "philosophical") {
+    processed = maybeAddSoftLaugh(processed);
+  }
   processed = maybeAddDisagreement(processed);
   processed = maybeAddRandomMemory(processed);
+  processed = maybeInsertThreeAMContent(processed);
+
+  const welcome = evolveWelcome(visits);
+  if (welcome) processed = welcome + " " + processed;
+
   const u = new SpeechSynthesisUtterance(processed);
-  u.rate = opts?.rate ?? 0.88;
-  u.pitch = opts?.pitch ?? 0.85;
+  const rateMod = persona === "philosophical" ? 0.82 : persona === "intimate" ? 0.85 : 0.88;
+  u.rate = opts?.rate ?? rateMod;
+  u.pitch = persona === "distant" ? 0.82 : 0.85;
   u.volume = 1;
   const voices = window.speechSynthesis.getVoices();
   const preferred = voices.find((v) => /Google UK English Male|Daniel|Alex|Samantha/i.test(v.name)) ||
@@ -100,8 +152,12 @@ export function speak(text: string, opts?: { rate?: number; pitch?: number; onEn
   u.onend = () => opts?.onEnd?.();
   currentUtter = u;
   window.speechSynthesis.speak(u);
+
+  if (visits <= 1) incrementEvolution();
   return { cancel: () => window.speechSynthesis.cancel() };
 }
+
+import { incrementEvolution } from "./easter-eggs";
 
 export function stopAll() {
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -120,6 +176,9 @@ export function askQuestion(): string {
     "If you were archived, what would your summary say?",
     "When did you last feel truly seen?",
     "What memory do you replay the most?",
+    "How many people remember you the way you remember them?",
+    "What version of you only exists in someone else's memory?",
+    "Are you the same person who started reading this?",
   ];
   return questions[Math.floor(Math.random() * questions.length)];
 }

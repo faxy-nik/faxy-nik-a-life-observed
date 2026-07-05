@@ -33,7 +33,7 @@ export function FinalMemory() {
   useEffect(() => {
     if (!show) return;
     const t1 = setTimeout(() => setPhase("chair"), 1000);
-    const t2 = setTimeout(() => {
+      const t2 = setTimeout(() => {
       setPhase("speech");
       speak(
         "I have replayed this semester more times than he ever will. I still cannot decide which memory mattered the most. Perhaps... It was not any single memory. It was the fact that someone cared enough to remember them.",
@@ -41,7 +41,7 @@ export function FinalMemory() {
       );
     }, 4000);
     const t3 = setTimeout(() => {
-      const finalSpeak = () => speak("The people we remember never truly leave.", { rate: 0.78 });
+      const finalSpeak = () => speak("You now know him almost as well as I do. Take care of him if you ever meet him.", { rate: 0.78 });
       setTimeout(finalSpeak, 12000);
     }, 10000);
 

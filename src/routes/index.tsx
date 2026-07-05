@@ -46,6 +46,12 @@ import { MemoryTree } from "@/components/MemoryTree";
 import { CampusSounds } from "@/components/CampusSounds";
 import { FinalMemory } from "@/components/FinalMemory";
 import { HeartBeat } from "@/components/HeartBeat";
+import { ThreeAMMode } from "@/components/ThreeAMMode";
+import { AIPaintings, getMoodIdForSection } from "@/components/AIPaintings";
+import { GlobalColorGrading } from "@/components/GlobalColorGrading";
+import { ArchiveAging } from "@/components/ArchiveAging";
+import { EvolvingHandwriting } from "@/components/EvolvingHandwriting";
+import { EmotionWatcher } from "@/components/EmotionWatcher";
 import { getVisitCount, incrementVisit, getVisitMessage, checkAndShowTenMinMessage, isAfterMidnight } from "@/lib/easter-eggs";
 
 export const Route = createFileRoute("/")({
@@ -257,10 +263,17 @@ function useReveal<T extends HTMLElement>() {
 
 function Section({ id, children, className = "" }: { id?: string; children: React.ReactNode; className?: string }) {
   const { ref, visible } = useReveal<HTMLElement>();
+  const emotionMap: Record<string, string> = {
+    hero: "peace", who: "curiosity", stats: "observation", traits: "curiosity",
+    mind: "introspection", people: "intimacy", timeline: "nostalgia",
+    philosophy: "contemplation", learned: "growth", mosaic: "preservation",
+    letter: "love", final: "acceptance",
+  };
   return (
     <section
       id={id}
       ref={ref}
+      data-emotion={id ? emotionMap[id] || "peace" : undefined}
       className={`relative min-h-screen w-full flex items-center justify-center px-6 md:px-12 py-24 transition-all duration-[1600ms] ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
     >
       {children}
@@ -684,6 +697,11 @@ function Documentary() {
       {typeof window !== "undefined" && <ShutdownMessage />}
 
       {/* AMBIENT LAYER */}
+      <EmotionWatcher />
+      <ThreeAMMode />
+      <GlobalColorGrading />
+      <ArchiveAging />
+      <EvolvingHandwriting />
       <TheSky />
       <WeatherWindow />
       <EmotionClock />
