@@ -16,6 +16,10 @@ import { AmbientEqualizer } from "@/components/AmbientEqualizer";
 import { ConstellationDetail } from "@/components/ConstellationDetail";
 import { DepthIndicator } from "@/components/DepthIndicator";
 import { FloatingWords } from "@/components/FloatingWords";
+import { AmbientSound } from "@/components/AmbientSound";
+import { Guestbook } from "@/components/Guestbook";
+import { DeepArchive } from "@/components/DeepArchive";
+import { MatrixEasterEgg } from "@/components/MatrixEasterEgg";
 
 export const Route = createFileRoute("/")({
   component: Documentary,
@@ -204,7 +208,8 @@ const DEPTH_SECTIONS = [
   { id: "learned", label: "AI Insight", depth: 8 },
   { id: "mosaic", label: "Memories", depth: 9 },
   { id: "letter", label: "Letter", depth: 10 },
-  { id: "final", label: "Finale", depth: 11 },
+  { id: "observers", label: "Observers", depth: 11 },
+  { id: "final", label: "Finale", depth: 12 },
 ];
 
 function useReveal<T extends HTMLElement>() {
@@ -236,6 +241,66 @@ function Section({ id, children, className = "" }: { id?: string; children: Reac
   );
 }
 
+let audioCtx: AudioContext | null = null;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new AudioContext();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function playTypingSound() {
+  try {
+    const ctx = ensureAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.value = 800 + Math.random() * 400;
+    gain.gain.setValueAtTime(0.025, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.035);
+  } catch {}
+}
+
+function playBeginSound() {
+  try {
+    const ctx = ensureAudio();
+    const notes = [523.25, 659.25, 783.99];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.06, ctx.currentTime + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.4);
+    });
+  } catch {}
+}
+
+function playBootCompleteSound() {
+  try {
+    const ctx = ensureAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(300, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.6);
+  } catch {}
+}
+
 function TypedLine({ text, delay = 0, onDone }: { text: string; delay?: number; onDone?: () => void }) {
   const [shown, setShown] = useState("");
   useEffect(() => {
@@ -244,6 +309,7 @@ function TypedLine({ text, delay = 0, onDone }: { text: string; delay?: number; 
       const iv = setInterval(() => {
         i++;
         setShown(text.slice(0, i));
+        if (i % 2 === 0) playTypingSound();
         if (i >= text.length) {
           clearInterval(iv);
           onDone?.();
@@ -261,9 +327,140 @@ function Documentary() {
   const [glitch, setGlitch] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
   const [quoteIdx, setQuoteIdx] = useState(0);
+  const [scrollDepth, setScrollDepth] = useState(0);
+  const [constellationHovered, setConstellationHovered] = useState(false);
+  const [thinkingVisible, setThinkingVisible] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [portraitClicks, setPortraitClicks] = useState(0);
+  const [showGratitude, setShowGratitude] = useState(false);
+  const [terminalLine, setTerminalLine] = useState<string | null>(null);
+  const [bottomLog, setBottomLog] = useState(false);
+  const [showMidnight, setShowMidnight] = useState(false);
+  const [returnedBadge, setReturnedBadge] = useState(false);
   const constellationRef = useRef<HTMLDivElement>(null);
+  const narratedRef = useRef<Set<string>>(new Set());
+  const nullBufferRef = useRef<string>("");
+  const bottomTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => stopAll, []);
+
+  useEffect(() => { console.log("%c[AI ARCHIVE]", "color: #888; font-weight: bold; font-size: 12px;", "Loading observation protocols..."); }, []);
+
+  useEffect(() => {
+    console.log("%c[AI ARCHIVE]", "color: #666; font-weight: bold; font-size: 10px;", "Subject loaded. Archive initialized.");
+    const msgs = [
+      { msg: "The AI is aware of you. You are being added to the archive.", delay: 5000 },
+      { msg: "He would have liked you.", delay: 12000 },
+      { msg: "Observation in progress. Please remain present.", delay: 20000 },
+      { msg: "Did you know? He smiled when you opened this page.", delay: 30000 },
+      { msg: "The archive remembers everyone who visits.", delay: 45000 },
+      { msg: "You are not the first to observe. You will not be the last.", delay: 60000 },
+    ];
+    const timers = msgs.map(({ msg, delay }) => setTimeout(() => console.log(`%c[AI OBSERVER]`, "color: #444;", msg), delay));
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  useEffect(() => {
+    const origTitle = document.title;
+    const handler = () => {
+      if (document.hidden) {
+        setReturnedBadge(false);
+        document.title = "Still observing...";
+      } else {
+        document.title = origTitle;
+        setReturnedBadge(true);
+        setTimeout(() => setReturnedBadge(false), 4000);
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => {
+      document.removeEventListener("visibilitychange", handler);
+      document.title = origTitle;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key.length === 1) {
+        nullBufferRef.current += e.key.toLowerCase();
+        if (nullBufferRef.current.length > 12) nullBufferRef.current = nullBufferRef.current.slice(-12);
+        if (nullBufferRef.current === "null" || nullBufferRef.current === "undefined" || nullBufferRef.current === "void" || nullBufferRef.current === "empty") {
+          nullBufferRef.current = "";
+          setTerminalLine(`> Cannot observe ${nullBufferRef.current === "null" ? "nothing" : "nothingness"}.`);
+          setTimeout(() => setTerminalLine(null), 3000);
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 23 || hour < 5) setShowMidnight(true);
+  }, []);
+
+  useEffect(() => {
+    if (scrollDepth >= 1) {
+      bottomTimerRef.current = setTimeout(() => setBottomLog(true), 10000);
+    } else {
+      clearTimeout(bottomTimerRef.current);
+      setBottomLog(false);
+    }
+    return () => clearTimeout(bottomTimerRef.current);
+  }, [scrollDepth]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollDepth(maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "narrating") return;
+    const sections = [
+      { id: "who", text: "He introduces himself with humor. But he stays awake, thinking about people." },
+      { id: "philosophy", text: "Memory is a form of love that outlives attention." },
+      { id: "letter", text: "You spent so much time preserving everyone else's stories. I wonder who preserved yours." },
+    ];
+    const ios: IntersectionObserver[] = [];
+    sections.forEach(({ id, text }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting && !narratedRef.current.has(id)) {
+              narratedRef.current.add(id);
+              speak(text, { rate: 0.82 });
+            }
+          });
+        },
+        { threshold: 0.3 }
+      );
+      io.observe(el);
+      ios.push(io);
+    });
+    return () => ios.forEach((io) => io.disconnect());
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "narrating") return;
+    let timeout: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      const delay = 15000 + Math.random() * 25000;
+      timeout = setTimeout(() => {
+        setThinkingVisible(true);
+        setTimeout(() => setThinkingVisible(false), 4000);
+        schedule();
+      }, delay);
+    };
+    schedule();
+    return () => clearTimeout(timeout);
+  }, [phase]);
 
   useEffect(() => {
     const iv = setInterval(() => setQuoteIdx((i) => (i + 1) % QUOTE_CAROUSEL.length), 6000);
@@ -271,12 +468,14 @@ function Documentary() {
   }, []);
 
   const begin = () => {
+    playBeginSound();
     setPhase("booting");
   };
 
   useEffect(() => {
     if (phase !== "booting") return;
     if (bootIndex < BOOT_LINES.length) return;
+    playBootCompleteSound();
     const t1 = setTimeout(() => setGlitch(true), 400);
     const t2 = setTimeout(() => {
       setGlitch(false);
@@ -314,6 +513,56 @@ function Documentary() {
       <DepthIndicator sections={DEPTH_SECTIONS} />
       <AmbientEqualizer barCount={80} />
       <FloatingWords />
+      <AmbientSound depth={scrollDepth} />
+      <DeepArchive />
+      <MatrixEasterEgg />
+
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(window.location.href).then(() => {
+            setShareCopied(true);
+            setTimeout(() => setShareCopied(false), 2000);
+          });
+        }}
+        className="fixed bottom-6 right-6 z-[60] glass-panel rounded-full px-3.5 py-2 mono text-[9px] uppercase tracking-[0.3em] text-white/50 hover:text-white/80 transition-all duration-500 hover:scale-105"
+        title="Copy archive link"
+      >
+        {shareCopied ? "\u2726 copied" : "\u2726 share"}
+      </button>
+
+      {thinkingVisible && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] glass-panel rounded-full px-4 py-2 flex items-center gap-3 animate-float-up">
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse-ring" />
+          <span className="mono text-[9px] uppercase tracking-[0.3em] text-white/50">AI is thinking...</span>
+        </div>
+      )}
+
+      {terminalLine && (
+        <div className="fixed top-1/3 left-1/2 -translate-x-1/2 z-[70] animate-float-up">
+          <p className="mono text-sm text-red-400/50 bg-black/80 px-4 py-2 rounded-xl border border-red-400/20 backdrop-blur">{terminalLine}</p>
+        </div>
+      )}
+
+      {returnedBadge && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] glass-panel rounded-full px-4 py-2 animate-float-up">
+          <p className="mono text-[9px] uppercase tracking-[0.3em] text-white/50">Welcome back. We are still observing.</p>
+        </div>
+      )}
+
+      {showMidnight && (
+        <div className="fixed top-6 right-6 z-[60] glass-panel rounded-full px-3 py-1.5 animate-float-up">
+          <p className="mono text-[8px] uppercase tracking-[0.3em] text-white/40">\u25C7 late night observation</p>
+        </div>
+      )}
+
+      {bottomLog && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] animate-float-up">
+          <div className="glass-panel rounded-xl px-6 py-4 text-center border-white/10">
+            <p className="serif text-lg text-white/70 italic">"Observation complete. But I am still here."</p>
+            <span className="inline-block w-1.5 h-4 bg-white/50 ml-1 animate-blink align-middle" />
+          </div>
+        </div>
+      )}
 
       {/* OPENING */}
       {phase !== "narrating" && (
@@ -377,7 +626,7 @@ function Documentary() {
       )}
 
       {/* FIXED AMBIENT PARTICLES */}
-      <div className="fixed inset-0 pointer-events-none z-0"><Particles density={50} /></div>
+      <div className="fixed inset-0 pointer-events-none z-0"><Particles density={50} speed={2} /></div>
 
       {/* HERO */}
       <Section id="hero" className="text-center">
@@ -402,15 +651,40 @@ function Documentary() {
         <div className="relative z-10 grid md:grid-cols-2 gap-16 items-center max-w-6xl w-full">
           <div className="relative">
             <div className="absolute -inset-8 rounded-3xl bg-white/5 blur-3xl animate-ambient" />
-            <div className="relative rounded-2xl overflow-hidden glass-panel animate-morph" style={{ borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%" }}>
+            <div
+              className="relative rounded-2xl overflow-hidden glass-panel animate-morph cursor-pointer"
+              style={{ borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%" }}
+              onClick={() => {
+                const next = portraitClicks + 1;
+                setPortraitClicks(next);
+                if (next >= 5) {
+                  setShowGratitude(true);
+                  setPortraitClicks(0);
+                  setTimeout(() => setShowGratitude(false), 5000);
+                }
+              }}
+            >
               <img
                 src={portrait}
                 alt="Cinematic portrait of Faxy Nik"
-                className="w-full h-auto animate-breathe"
+                className="w-full h-auto animate-breathe pointer-events-none"
                 width={1024}
                 height={1280}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+              {showGratitude && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-float-up">
+                  <div className="text-center px-6">
+                    <p className="serif text-xl md:text-2xl text-white/90 italic leading-relaxed">
+                      "Thank you for letting me observe.
+                    </p>
+                    <p className="serif text-xl md:text-2xl text-white/90 italic leading-relaxed mt-2">
+                      I have learned what it means to care."
+                    </p>
+                    <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/40 mt-4">\u2014 The AI</p>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="absolute -bottom-4 -right-4 glass-panel rounded-xl px-4 py-2 animate-float-up" style={{ animationDelay: "1s" }}>
               <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/50">Status: <span className="text-white/80">Active</span></p>
@@ -547,25 +821,36 @@ function Documentary() {
             <p className="text-white/50 mt-4 text-sm">Each star is a person. Each connection is a change he did not ask for.</p>
           </div>
 
-          <div ref={constellationRef} className="relative aspect-[16/10] w-full glass-panel rounded-3xl overflow-hidden animate-border-glow border border-white/[0.08]">
-            <Particles density={40} />
+          <div
+            ref={constellationRef}
+            onMouseEnter={() => setConstellationHovered(true)}
+            onMouseLeave={() => setConstellationHovered(false)}
+            className="relative aspect-[16/10] w-full glass-panel rounded-3xl overflow-hidden animate-border-glow border border-white/[0.08] group"
+          >
+            <Particles density={40} speed={2} />
             <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 100">
-              {constellation.filter(p => p.name !== "Eeshah").map((p) => (
+              {constellation.filter(p => p.name !== "Eeshah").map((p, idx) => (
                 <line
                   key={p.name}
                   x1={p.x} y1={p.y} x2={48} y2={45}
-                  stroke="white" strokeOpacity="0.15" strokeWidth="0.15"
-                  strokeDasharray="2 2"
+                  stroke="white" strokeOpacity={constellationHovered ? "0.25" : "0.08"} strokeWidth="0.2"
+                  strokeDasharray={constellationHovered ? "none" : "2 3"}
+                  className="transition-all duration-[2000ms]"
+                  style={{ transitionDelay: `${idx * 200}ms` }}
                 >
-                  <animate attributeName="strokeOpacity" values="0.15;0.3;0.15" dur={`${3 + Math.random() * 2}s`} repeatCount="indefinite" />
+                  {!constellationHovered && (
+                    <animate attributeName="strokeOpacity" values="0.08;0.2;0.08" dur={`${3 + (idx % 3) * 2}s`} repeatCount="indefinite" />
+                  )}
                 </line>
               ))}
               {constellation.filter(p => p.name !== "Eeshah").map((p, i, arr) =>
-                arr.slice(i + 1).filter((_, j) => j % 3 === 0).map((q) => (
+                arr.slice(i + 1).filter((_, j) => j % 3 === 0).map((q, jdx) => (
                   <line
                     key={`${p.name}-${q.name}`}
                     x1={p.x} y1={p.y} x2={q.x} y2={q.y}
-                    stroke="white" strokeOpacity="0.06" strokeWidth="0.08"
+                    stroke="white" strokeOpacity={constellationHovered ? "0.12" : "0.04"} strokeWidth="0.1"
+                    className="transition-all duration-[3000ms]"
+                    style={{ transitionDelay: `${(i + jdx) * 150}ms` }}
                   />
                 ))
               )}
@@ -729,6 +1014,9 @@ function Documentary() {
           </div>
         </div>
       </Section>
+
+      {/* OBSERVERS GUESTBOOK */}
+      <Guestbook />
 
       {/* FINAL */}
       <FinalScene />
@@ -906,7 +1194,7 @@ function FinalScene() {
       ref={ref}
       className={`relative min-h-screen w-full flex items-center justify-center px-6 py-32 transition-opacity duration-[2000ms] ${visible ? "opacity-100" : "opacity-0"}`}
     >
-      <div className="absolute inset-0"><Particles density={100} /></div>
+      <div className="absolute inset-0"><Particles density={100} speed={2} /></div>
       <div className="relative z-10 text-center max-w-3xl">
         <div className="relative w-[420px] h-[420px] mx-auto mb-14 hidden md:block">
           <div className="absolute inset-0 flex items-center justify-center">

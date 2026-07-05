@@ -49,7 +49,7 @@ export function ChapterNav() {
           <span className="mono text-[9px] uppercase tracking-[0.2em] text-white/0 group-hover:text-white/60 transition-colors duration-300 whitespace-nowrap">
             {ch.label}
           </span>
-          <span className={`chapter-nav-dot ${active === ch.id ? "active" : ""}`} />
+          <span className={`chapter-nav-dot heartbeat ${active === ch.id ? "active" : ""}`} />
         </button>
       ))}
     </nav>

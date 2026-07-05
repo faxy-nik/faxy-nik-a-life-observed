@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-export function Particles({ density = 80 }: { density?: number }) {
+export function Particles({ density = 80, speed = 1 }: { density?: number; speed?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -11,6 +11,7 @@ export function Particles({ density = 80 }: { density?: number }) {
     let w = 0, h = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let mx = -1000, my = -1000;
+    let frame = 0;
 
     const resize = () => {
       w = canvas.clientWidth;
@@ -43,9 +44,14 @@ export function Particles({ density = 80 }: { density?: number }) {
     const MOUSE_RADIUS = 180;
 
     const tick = () => {
+      frame++;
+      if (frame % speed !== 0) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+
       ctx.clearRect(0, 0, w, h);
 
-      // Draw connection lines between nearby particles
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -64,7 +70,6 @@ export function Particles({ density = 80 }: { density?: number }) {
       }
 
       for (const p of particles) {
-        // Mouse repulsion
         const dmx = p.x - mx;
         const dmy = p.y - my;
         const dm = Math.sqrt(dmx * dmx + dmy * dmy);
@@ -94,7 +99,7 @@ export function Particles({ density = 80 }: { density?: number }) {
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMouse);
     };
-  }, [density]);
+  }, [density, speed]);
 
   return <canvas ref={ref} className="pointer-events-none absolute inset-0 h-full w-full" />;
 }
