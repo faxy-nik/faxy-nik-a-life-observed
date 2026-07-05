@@ -1,4 +1,4 @@
-import { getVisitCount, getEvolutionLevel, getNarratorPersona } from "./easter-eggs";
+import { getVisitCount, getEvolutionLevel, getNarratorPersona, incrementEvolution } from "./easter-eggs";
 
 export type NarrationHandle = { cancel: () => void };
 
@@ -156,8 +156,6 @@ export function speak(text: string, opts?: { rate?: number; pitch?: number; onEn
   if (visits <= 1) incrementEvolution();
   return { cancel: () => window.speechSynthesis.cancel() };
 }
-
-import { incrementEvolution } from "./easter-eggs";
 
 export function stopAll() {
   if (typeof window !== "undefined" && "speechSynthesis" in window) {

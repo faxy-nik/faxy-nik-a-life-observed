@@ -47,7 +47,7 @@ import { CampusSounds } from "@/components/CampusSounds";
 import { FinalMemory } from "@/components/FinalMemory";
 import { HeartBeat } from "@/components/HeartBeat";
 import { ThreeAMMode } from "@/components/ThreeAMMode";
-import { AIPaintings, getMoodIdForSection } from "@/components/AIPaintings";
+import { AIPaintings } from "@/components/AIPaintings";
 import { GlobalColorGrading } from "@/components/GlobalColorGrading";
 import { ArchiveAging } from "@/components/ArchiveAging";
 import { EvolvingHandwriting } from "@/components/EvolvingHandwriting";
