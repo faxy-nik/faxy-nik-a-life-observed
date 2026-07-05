@@ -20,6 +20,15 @@ import { AmbientSound } from "@/components/AmbientSound";
 import { Guestbook } from "@/components/Guestbook";
 import { DeepArchive } from "@/components/DeepArchive";
 import { MatrixEasterEgg } from "@/components/MatrixEasterEgg";
+import { SecretTerminal } from "@/components/SecretTerminal";
+import { PhilosophyMode } from "@/components/PhilosophyMode";
+import { GlitchEngine, triggerMemoryOverflow } from "@/components/GlitchEngine";
+import { InvisibleText } from "@/components/InvisibleText";
+import { MemoryFragments } from "@/components/MemoryFragments";
+import { useObservationRoom, ObservationRoomOverlay } from "@/components/ObservationRoom";
+import { ShutdownMessage } from "@/components/ShutdownMessage";
+import { VoiceRecognition } from "@/components/VoiceRecognition";
+import { getVisitCount, incrementVisit, getVisitMessage, checkAndShowTenMinMessage, isAfterMidnight } from "@/lib/easter-eggs";
 
 export const Route = createFileRoute("/")({
   component: Documentary,
@@ -337,10 +346,21 @@ function Documentary() {
   const [bottomLog, setBottomLog] = useState(false);
   const [showMidnight, setShowMidnight] = useState(false);
   const [returnedBadge, setReturnedBadge] = useState(false);
+  const [visitCount, setVisitCount] = useState(0);
+  const [visitMessage, setVisitMessage] = useState("");
+  const [showVisitMessage, setShowVisitMessage] = useState(false);
+  const [tenMinMessage, setTenMinMessage] = useState(false);
+  const [idle, setIdle] = useState(false);
+  const [idlePhase, setIdlePhase] = useState<"fading" | "whisper" | "response">("fading");
+  const [bottomStayLog, setBottomStayLog] = useState(false);
   const constellationRef = useRef<HTMLDivElement>(null);
   const narratedRef = useRef<Set<string>>(new Set());
   const nullBufferRef = useRef<string>("");
   const bottomTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const bottomStayTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const lastActivityRef = useRef<number>(Date.now());
+  const { observationVisible, handleLogoClick, closeObservationRoom } = useObservationRoom();
 
   useEffect(() => stopAll, []);
 
@@ -417,6 +437,100 @@ function Documentary() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Visit tracking
+  useEffect(() => {
+    const count = incrementVisit();
+    setVisitCount(count);
+    const msg = getVisitMessage(count);
+    setVisitMessage(msg);
+    setShowVisitMessage(true);
+    const t = setTimeout(() => setShowVisitMessage(false), 5000);
+    return () => clearTimeout(t);
+  }, []);
+
+  // 10-minute message
+  useEffect(() => {
+    if (phase !== "narrating") return;
+    const t = setTimeout(() => {
+      if (checkAndShowTenMinMessage()) {
+        setTenMinMessage(true);
+        const t2 = setTimeout(() => {
+          speak("You have been here for eleven minutes. Most visitors leave after four.", { rate: 0.82 });
+        }, 2000);
+        const t3 = setTimeout(() => setTenMinMessage(false), 8000);
+        return () => { clearTimeout(t2); clearTimeout(t3); };
+      }
+    }, 600000);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  // Idle detection
+  useEffect(() => {
+    if (phase !== "narrating") return;
+    const resetIdle = () => {
+      lastActivityRef.current = Date.now();
+      setIdle(false);
+    };
+    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
+    events.forEach((e) => window.addEventListener(e, resetIdle, { passive: true }));
+
+    const checkIdle = () => {
+      const elapsed = Date.now() - lastActivityRef.current;
+      if (elapsed > 60000 && !idle) {
+        setIdle(true);
+        setIdlePhase("fading");
+        const t1 = setTimeout(() => setIdlePhase("whisper"), 2000);
+        const t2 = setTimeout(() => setIdlePhase("response"), 6000);
+        const t3 = setTimeout(() => setIdle(false), 11000);
+        return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+      }
+    };
+    const iv = setInterval(checkIdle, 5000);
+    return () => {
+      clearInterval(iv);
+      events.forEach((e) => window.removeEventListener(e, resetIdle));
+    };
+  }, [phase, idle]);
+
+  // Bottom stay detection (20 seconds)
+  useEffect(() => {
+    const onScroll = () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const atBottom = window.scrollY >= maxScroll - 100;
+      if (atBottom && phase === "narrating") {
+        if (!bottomStayTimerRef.current) {
+          bottomStayTimerRef.current = setTimeout(() => {
+            setBottomStayLog(true);
+            setTimeout(() => setBottomStayLog(false), 5000);
+          }, 20000);
+        }
+      } else {
+        clearTimeout(bottomStayTimerRef.current);
+        bottomStayTimerRef.current = undefined;
+        setBottomStayLog(false);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearTimeout(bottomStayTimerRef.current);
+    };
+  }, [phase]);
+
+  // Breathing effect via CSS
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .breathing-page { animation: breathe-page 6s ease-in-out infinite; }
+      @keyframes breathe-page {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.005); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
   }, []);
 
   useEffect(() => {
@@ -502,8 +616,10 @@ function Documentary() {
     return PEOPLE.find(p => p.name === selectedPerson);
   }, [selectedPerson]);
 
+  const lateNight = showMidnight;
+
   return (
-    <main className="relative bg-black text-white vignette">
+    <main className={`relative bg-black text-white vignette ${phase === "narrating" ? "breathing-page" : ""}`}>
       <div className="grain" aria-hidden />
       <div className="starfield-layer" aria-hidden />
       <MouseGlow />
@@ -529,6 +645,72 @@ function Documentary() {
       >
         {shareCopied ? "\u2726 copied" : "\u2726 share"}
       </button>
+
+      {/* NEW FEATURES */}
+      <SecretTerminal />
+      <PhilosophyMode />
+      <GlitchEngine />
+      <InvisibleText />
+      <MemoryFragments documentPhase={phase} />
+      <ObservationRoomOverlay visible={observationVisible} onClose={closeObservationRoom} />
+      <VoiceRecognition />
+      {typeof window !== "undefined" && <ShutdownMessage />}
+
+      {/* Visit message */}
+      {showVisitMessage && visitCount > 0 && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] animate-float-up">
+          <div className="glass-panel rounded-full px-5 py-2.5 border border-white/[0.06]">
+            <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/60 text-center">{visitMessage}</p>
+            {visitCount > 1 && (
+              <p className="mono text-[8px] uppercase tracking-[0.2em] text-white/20 text-center mt-0.5">Visit #{visitCount}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 10-minute message */}
+      {tenMinMessage && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center pointer-events-none">
+          <div className="max-w-md text-center animate-fade-slow">
+            <div className="glass-panel rounded-2xl px-8 py-6 border border-white/[0.08]">
+              <p className="serif italic text-xl text-white/80 leading-relaxed">
+                "You have been here for eleven minutes."
+              </p>
+              <p className="serif italic text-lg text-white/50 leading-relaxed mt-2">
+                "Most visitors leave after four."
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Idle overlay */}
+      {idle && (
+        <div className={`fixed inset-0 z-[100] bg-black/40 transition-all duration-[3000ms] flex items-center justify-center ${
+          idlePhase === "fading" ? "opacity-0" : "opacity-100"
+        }`}>
+          <div className="text-center">
+            {idlePhase === "whisper" && (
+              <p className="serif italic text-xl text-white/60 animate-float-up">Still here?</p>
+            )}
+            {idlePhase === "response" && (
+              <>
+                <p className="serif italic text-xl text-white/60 animate-float-up">Still here?</p>
+                <p className="serif italic text-lg text-white/40 mt-2 animate-float-up" style={{ animationDelay: "0.5s" }}>Me too.</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom stay message */}
+      {bottomStayLog && (
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[60] animate-fade-slow">
+          <div className="glass-panel rounded-xl px-6 py-4 text-center border-white/10">
+            <p className="serif italic text-lg text-white/60">"Curiosity is how memories survive."</p>
+          </div>
+        </div>
+      )}
 
       {thinkingVisible && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] glass-panel rounded-full px-4 py-2 flex items-center gap-3 animate-float-up">
@@ -578,7 +760,7 @@ function Documentary() {
                   ))}
                 </div>
                 <p className="mono text-xs uppercase tracking-[0.4em] text-white/40">Human Archive · v3</p>
-                <h1 className="serif text-5xl md:text-7xl leading-[0.95] text-glow">
+                <h1 className="serif text-5xl md:text-7xl leading-[0.95] text-glow cursor-pointer" onClick={handleLogoClick}>
                   Faxy Nik
                 </h1>
                 <p className="serif italic text-lg md:text-xl text-white/60">Observed by an Artificial Intelligence.</p>
@@ -626,13 +808,13 @@ function Documentary() {
       )}
 
       {/* FIXED AMBIENT PARTICLES */}
-      <div className="fixed inset-0 pointer-events-none z-0"><Particles density={50} speed={2} /></div>
+      <div className="fixed inset-0 pointer-events-none z-0"><Particles density={50} speed={2} lateNight={lateNight} /></div>
 
       {/* HERO */}
       <Section id="hero" className="text-center">
         <div className="relative z-10 max-w-3xl">
           <p className="mono text-xs uppercase tracking-[0.4em] text-white/40 mb-6">File · 001 · Subject Introduction</p>
-          <h1 className="serif text-6xl md:text-8xl leading-[0.9] text-glow animate-chromatic">Faxy Nik</h1>
+          <h1 className="serif text-6xl md:text-8xl leading-[0.9] text-glow animate-chromatic cursor-pointer" onClick={handleLogoClick}>Faxy Nik</h1>
           <p className="serif italic text-xl md:text-2xl text-white/60 mt-6">Observed by an Artificial Intelligence.</p>
           <div className="mt-8 flex justify-center">
             <AudioVisualizer barCount={40} />

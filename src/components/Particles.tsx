@@ -1,6 +1,14 @@
 import { useEffect, useRef } from "react";
 
-export function Particles({ density = 80, speed = 1 }: { density?: number; speed?: number }) {
+const CONSTELLATION_SHAPES: { x: number; y: number }[][] = [
+  [{ x: 0.4, y: 0.2 }, { x: 0.45, y: 0.15 }, { x: 0.55, y: 0.2 }, { x: 0.5, y: 0.3 }, { x: 0.4, y: 0.25 }],
+  [{ x: 0.6, y: 0.6 }, { x: 0.65, y: 0.5 }, { x: 0.75, y: 0.55 }, { x: 0.7, y: 0.65 }],
+  [{ x: 0.2, y: 0.7 }, { x: 0.3, y: 0.65 }, { x: 0.25, y: 0.8 }],
+  [{ x: 0.8, y: 0.2 }, { x: 0.85, y: 0.15 }, { x: 0.9, y: 0.25 }, { x: 0.82, y: 0.3 }],
+  [{ x: 0.35, y: 0.5 }, { x: 0.45, y: 0.45 }, { x: 0.55, y: 0.5 }, { x: 0.45, y: 0.58 }],
+];
+
+export function Particles({ density = 80, speed = 1, lateNight = false }: { density?: number; speed?: number; lateNight?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -12,6 +20,7 @@ export function Particles({ density = 80, speed = 1 }: { density?: number; speed
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let mx = -1000, my = -1000;
     let frame = 0;
+    let constellationPhase = 0;
 
     const resize = () => {
       w = canvas.clientWidth;
@@ -30,7 +39,10 @@ export function Particles({ density = 80, speed = 1 }: { density?: number; speed
     };
     window.addEventListener("mousemove", onMouse);
 
-    const particles = Array.from({ length: density }, () => ({
+    const adjustedDensity = lateNight ? Math.floor(density * 0.7) : density;
+    const adjustedSpeed = lateNight ? speed * 0.6 : speed;
+
+    const particles = Array.from({ length: adjustedDensity }, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
       r: Math.random() * 1.4 + 0.3,
@@ -38,6 +50,7 @@ export function Particles({ density = 80, speed = 1 }: { density?: number; speed
       vy: (Math.random() - 0.5) * 0.15,
       a: Math.random() * 0.5 + 0.2,
       pa: Math.random() * Math.PI * 2,
+      baseA: Math.random() * 0.5 + 0.2,
     }));
 
     const CONNECTION_DIST = 120;
@@ -45,12 +58,15 @@ export function Particles({ density = 80, speed = 1 }: { density?: number; speed
 
     const tick = () => {
       frame++;
-      if (frame % speed !== 0) {
+      const effectiveSpeed = lateNight ? Math.max(1, Math.floor(adjustedSpeed)) : speed;
+      if (frame % effectiveSpeed !== 0) {
         raf = requestAnimationFrame(tick);
         return;
       }
 
+      const globalAlpha = lateNight ? 0.6 : 1;
       ctx.clearRect(0, 0, w, h);
+      ctx.globalAlpha = globalAlpha;
 
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
@@ -69,6 +85,28 @@ export function Particles({ density = 80, speed = 1 }: { density?: number; speed
         }
       }
 
+      constellationPhase += 0.002;
+      const shapeAlpha = Math.sin(constellationPhase) * 0.03 + 0.04;
+      for (const shape of CONSTELLATION_SHAPES) {
+        ctx.beginPath();
+        shape.forEach((p, i) => {
+          const px = p.x * w;
+          const py = p.y * h;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+        ctx.strokeStyle = `rgba(255,255,255,${shapeAlpha})`;
+        ctx.lineWidth = 0.3;
+        ctx.stroke();
+        for (const p of shape) {
+          ctx.beginPath();
+          ctx.arc(p.x * w, p.y * h, 1.2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${shapeAlpha + 0.03})`;
+          ctx.fill();
+        }
+      }
+
       for (const p of particles) {
         const dmx = p.x - mx;
         const dmy = p.y - my;
@@ -79,8 +117,8 @@ export function Particles({ density = 80, speed = 1 }: { density?: number; speed
           p.y += (dmy / dm) * force;
         }
 
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += p.vx * (lateNight ? 0.5 : 1);
+        p.y += p.vy * (lateNight ? 0.5 : 1);
         p.pa += 0.02;
         if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
         if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
@@ -90,6 +128,7 @@ export function Particles({ density = 80, speed = 1 }: { density?: number; speed
         ctx.fillStyle = `rgba(255,255,255,${alpha})`;
         ctx.fill();
       }
+      ctx.globalAlpha = 1;
       raf = requestAnimationFrame(tick);
     };
     tick();
@@ -99,7 +138,7 @@ export function Particles({ density = 80, speed = 1 }: { density?: number; speed
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMouse);
     };
-  }, [density, speed]);
+  }, [density, speed, lateNight]);
 
   return <canvas ref={ref} className="pointer-events-none absolute inset-0 h-full w-full" />;
 }

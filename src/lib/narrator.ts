@@ -3,13 +3,32 @@ export type NarrationHandle = { cancel: () => void };
 
 let currentUtter: SpeechSynthesisUtterance | null = null;
 
+function randomPauseWord(): string {
+  const pauses = ["... ", "… ", " — ", ". "];
+  return pauses[Math.floor(Math.random() * pauses.length)];
+}
+
+function maybeInsertHesitation(text: string): string {
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  if (sentences.length <= 1) return text;
+  const result: string[] = [];
+  for (let i = 0; i < sentences.length; i++) {
+    result.push(sentences[i]);
+    if (i < sentences.length - 1 && Math.random() < 0.15) {
+      result.push(randomPauseWord());
+    }
+  }
+  return result.join("");
+}
+
 export function speak(text: string, opts?: { rate?: number; pitch?: number; onEnd?: () => void }): NarrationHandle {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
     opts?.onEnd?.();
     return { cancel: () => {} };
   }
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+  const processed = maybeInsertHesitation(text);
+  const u = new SpeechSynthesisUtterance(processed);
   u.rate = opts?.rate ?? 0.88;
   u.pitch = opts?.pitch ?? 0.85;
   u.volume = 1;
