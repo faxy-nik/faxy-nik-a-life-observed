@@ -131,8 +131,9 @@ export function SecretTerminal() {
         }, i * 100);
       });
       if (entry.narration) {
+        const n = entry.narration;
         setTimeout(() => {
-          speakWithHesitation(entry.narration, { rate: 0.82 });
+          speakWithHesitation(n, { rate: 0.82 });
         }, outputLines.length * 100 + 300);
       }
     } else {

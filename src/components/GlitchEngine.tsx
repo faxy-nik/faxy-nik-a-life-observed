@@ -13,7 +13,7 @@ export function GlitchEngine() {
   const [subtleGlitch, setSubtleGlitch] = useState(false);
   const scrollSpeedRef = useRef(0);
   const lastScrollRef = useRef(0);
-  const memoryOverflowTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const memoryOverflowTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     globalGlitchListeners.push(() => {

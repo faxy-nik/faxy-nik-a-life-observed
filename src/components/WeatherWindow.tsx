@@ -73,7 +73,7 @@ export function WeatherWindow() {
         aurora: ["#0a0a1a","#0a1a2a","#0a2a1a","#0a0a1a"],
       };
       const colors = c[weather] || c.day;
-      colors.forEach((col, i) => g.addColorStop(i / (colors.length - 1 || 1), col));
+      colors.forEach((col, i) => { if (col) g.addColorStop(i / (colors.length - 1 || 1), col); });
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
 

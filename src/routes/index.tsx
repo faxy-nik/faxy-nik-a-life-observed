@@ -387,9 +387,9 @@ function Documentary() {
   const constellationRef = useRef<HTMLDivElement>(null);
   const narratedRef = useRef<Set<string>>(new Set());
   const nullBufferRef = useRef<string>("");
-  const bottomTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const bottomStayTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const idleTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const bottomTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const bottomStayTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const lastActivityRef = useRef<number>(Date.now());
   const { observationVisible, handleLogoClick, closeObservationRoom } = useObservationRoom();
 

@@ -17,8 +17,8 @@ export function DreamMode() {
   const [active, setActive] = useState(false);
   const [whisperIdx, setWhisperIdx] = useState(0);
   const [showWhisper, setShowWhisper] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
-  const whisperTimerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const whisperTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   useEffect(() => {
     if (active || getDreamModeTriggered()) return;
