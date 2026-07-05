@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import portrait from "@/assets/portrait.jpg";
 import { Particles } from "@/components/Particles";
-import { speak, stopAll } from "@/lib/narrator";
+import { speak, stopAll, askQuestion } from "@/lib/narrator";
 import { MouseGlow } from "@/components/MouseGlow";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { FloatingOrbs } from "@/components/FloatingOrbs";
@@ -22,12 +22,30 @@ import { DeepArchive } from "@/components/DeepArchive";
 import { MatrixEasterEgg } from "@/components/MatrixEasterEgg";
 import { SecretTerminal } from "@/components/SecretTerminal";
 import { PhilosophyMode } from "@/components/PhilosophyMode";
-import { GlitchEngine, triggerMemoryOverflow } from "@/components/GlitchEngine";
+import { GlitchEngine } from "@/components/GlitchEngine";
 import { InvisibleText } from "@/components/InvisibleText";
 import { MemoryFragments } from "@/components/MemoryFragments";
 import { useObservationRoom, ObservationRoomOverlay } from "@/components/ObservationRoom";
 import { ShutdownMessage } from "@/components/ShutdownMessage";
 import { VoiceRecognition } from "@/components/VoiceRecognition";
+import { DreamMode } from "@/components/DreamMode";
+import { WeatherWindow } from "@/components/WeatherWindow";
+import { MemoryRoom } from "@/components/MemoryRoom";
+import { Shadows } from "@/components/Shadows";
+import { CursorEffects } from "@/components/CursorEffects";
+import { CuriosityTracker } from "@/components/CuriosityTracker";
+import { TheSky } from "@/components/TheSky";
+import { Mirror } from "@/components/Mirror";
+import { TheBook } from "@/components/TheBook";
+import { EmotionClock } from "@/components/EmotionClock";
+import { PianoKeys } from "@/components/PianoKeys";
+import { Library } from "@/components/Library";
+import { AmbientLights } from "@/components/AmbientLights";
+import { VisitorFootprints } from "@/components/VisitorFootprints";
+import { MemoryTree } from "@/components/MemoryTree";
+import { CampusSounds } from "@/components/CampusSounds";
+import { FinalMemory } from "@/components/FinalMemory";
+import { HeartBeat } from "@/components/HeartBeat";
 import { getVisitCount, incrementVisit, getVisitMessage, checkAndShowTenMinMessage, isAfterMidnight } from "@/lib/easter-eggs";
 
 export const Route = createFileRoute("/")({
@@ -646,7 +664,7 @@ function Documentary() {
         {shareCopied ? "\u2726 copied" : "\u2726 share"}
       </button>
 
-      {/* NEW FEATURES */}
+      {/* EASTER EGG LAYER */}
       <SecretTerminal />
       <PhilosophyMode />
       <GlitchEngine />
@@ -654,7 +672,27 @@ function Documentary() {
       <MemoryFragments documentPhase={phase} />
       <ObservationRoomOverlay visible={observationVisible} onClose={closeObservationRoom} />
       <VoiceRecognition />
+      <CuriosityTracker />
+      <PianoKeys />
+      <CampusSounds />
+      <HeartBeat />
+      <TheBook />
+      <MemoryRoom />
+      <Library />
+      <Mirror />
+      <FinalMemory />
       {typeof window !== "undefined" && <ShutdownMessage />}
+
+      {/* AMBIENT LAYER */}
+      <TheSky />
+      <WeatherWindow />
+      <EmotionClock />
+      <MemoryTree />
+      <Shadows />
+      <AmbientLights />
+      <VisitorFootprints />
+      <CursorEffects />
+      <DreamMode />
 
       {/* Visit message */}
       {showVisitMessage && visitCount > 0 && (
