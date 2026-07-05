@@ -658,7 +658,7 @@ function Documentary() {
       <FloatingOrbs count={6} />
       <ChapterNav />
       <DepthIndicator sections={DEPTH_SECTIONS} />
-      <AmbientEqualizer barCount={80} />
+      <AmbientEqualizer barCount={24} />
       <FloatingWords />
       <AmbientSound depth={scrollDepth} />
       <DeepArchive />
@@ -806,7 +806,7 @@ function Documentary() {
       {phase !== "narrating" && (
         <section className="fixed inset-0 z-50 bg-black flex items-center justify-center">
           <ScanLines />
-          <div className="absolute inset-0"><Particles density={60} /></div>
+          <div className="absolute inset-0" />
           <div className="relative z-10 max-w-2xl w-full px-8">
             {phase === "idle" && (
               <div className="animate-fade-slow text-center space-y-8">
@@ -864,7 +864,7 @@ function Documentary() {
       )}
 
       {/* FIXED AMBIENT PARTICLES */}
-      <div className="fixed inset-0 pointer-events-none z-0"><Particles density={50} speed={2} lateNight={lateNight} /></div>
+      <div className="fixed inset-0 pointer-events-none z-0"><Particles density={25} speed={2} lateNight={lateNight} /></div>
 
       {/* HERO */}
       <Section id="hero" className="text-center">
@@ -1065,7 +1065,6 @@ function Documentary() {
             onMouseLeave={() => setConstellationHovered(false)}
             className="relative aspect-[16/10] w-full glass-panel rounded-3xl overflow-hidden animate-border-glow border border-white/[0.08] group"
           >
-            <Particles density={40} speed={2} />
             <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 100">
               {constellation.filter(p => p.name !== "Eeshah").map((p, idx) => (
                 <line
@@ -1432,7 +1431,7 @@ function FinalScene() {
       ref={ref}
       className={`relative min-h-screen w-full flex items-center justify-center px-6 py-32 transition-opacity duration-[2000ms] ${visible ? "opacity-100" : "opacity-0"}`}
     >
-      <div className="absolute inset-0"><Particles density={100} speed={2} /></div>
+      <div className="absolute inset-0" />
       <div className="relative z-10 text-center max-w-3xl">
         <div className="relative w-[420px] h-[420px] mx-auto mb-14 hidden md:block">
           <div className="absolute inset-0 flex items-center justify-center">

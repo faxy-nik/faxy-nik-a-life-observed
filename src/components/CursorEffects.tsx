@@ -3,107 +3,55 @@ import { getVisitCount, getFoundFragments } from "@/lib/easter-eggs";
 
 export function CursorEffects() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [evolved, setEvolved] = useState(false);
+  const [evolved] = useState(() => {
+    const visits = getVisitCount(); const fragments = getFoundFragments();
+    return visits > 1 || fragments.length > 0;
+  });
 
   useEffect(() => {
-    const visits = getVisitCount();
-    const fragments = getFoundFragments();
-    if (visits > 1 || fragments.length > 0) setEvolved(true);
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
-    let raf = 0;
-    let w = 0, h = 0;
-    let mx = -100, my = -100;
-    let prevMx = -100, prevMy = -100;
-    let hesitating = false;
-    let hesitationTimer: ReturnType<typeof setTimeout>;
+    let raf = 0, w = 0, h = 0, mx = -100, my = -100, prevMx = -100, prevMy = -100;
+    let hesitating = false, frame = 0;
     let particles: { x: number; y: number; life: number; maxLife: number; size: number }[] = [];
 
-    const resize = () => {
-      w = window.innerWidth;
-      h = window.innerHeight;
-      canvas.width = w;
-      canvas.height = h;
-    };
-    resize();
-    window.addEventListener("resize", resize);
+    const resize = () => { w = window.innerWidth; h = window.innerHeight; canvas.width = w; canvas.height = h; };
+    resize(); window.addEventListener("resize", resize);
 
     const onMouse = (e: MouseEvent) => {
-      prevMx = mx; prevMy = my;
-      mx = e.clientX; my = e.clientY;
-
+      prevMx = mx; prevMy = my; mx = e.clientX; my = e.clientY;
       if (evolved) {
         const speed = Math.hypot(mx - prevMx, my - prevMy);
-        if (speed > 0.5 && Math.random() > 0.7) {
-          particles.push({
-            x: mx + (Math.random() - 0.5) * 4,
-            y: my + (Math.random() - 0.5) * 4,
-            life: 0,
-            maxLife: 20 + Math.random() * 30,
-            size: 1 + Math.random() * 1.5,
-          });
-        }
+        if (speed > 0.5 && Math.random() > 0.7) particles.push({ x: mx + (Math.random() - 0.5) * 4, y: my + (Math.random() - 0.5) * 4, life: 0, maxLife: 20 + Math.random() * 30, size: 1 + Math.random() * 1.5 });
       }
-
-      if (!hesitating && Math.random() > 0.997) {
-        hesitating = true;
-        clearTimeout(hesitationTimer);
-        hesitationTimer = setTimeout(() => { hesitating = false; }, 600);
-      }
+      if (!hesitating && Math.random() > 0.998) { hesitating = true; setTimeout(() => { hesitating = false; }, 400); }
     };
     window.addEventListener("mousemove", onMouse);
 
     const tick = () => {
+      raf = requestAnimationFrame(tick); frame++;
+      if (frame % 2 !== 0) return;
       ctx.clearRect(0, 0, w, h);
-
-      ctx.beginPath();
-      ctx.arc(mx, my, hesitating ? 3 : 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${hesitating ? 0.3 : 0.6})`;
-      ctx.fill();
-
+      ctx.beginPath(); ctx.arc(mx, my, hesitating ? 3 : 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${hesitating ? 0.3 : 0.6})`; ctx.fill();
       if (evolved) {
-        if (particles.length > 80) particles = particles.slice(-80);
+        if (particles.length > 50) particles = particles.slice(-50);
         for (let i = particles.length - 1; i >= 0; i--) {
-          const p = particles[i];
-          p.life++;
-          p.y -= 0.2;
-          p.x += (Math.random() - 0.5) * 0.3;
-          const alpha = Math.max(0, 1 - p.life / p.maxLife);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255,255,255,${alpha * 0.4})`;
-          ctx.fill();
+          const p = particles[i]; p.life++; p.y -= 0.2; p.x += (Math.random() - 0.5) * 0.3;
+          const a = Math.max(0, 1 - p.life / p.maxLife);
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size * a, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${a * 0.3})`; ctx.fill();
           if (p.life >= p.maxLife) particles.splice(i, 1);
         }
       }
-
-      raf = requestAnimationFrame(tick);
     };
     tick();
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMouse);
-      clearTimeout(hesitationTimer);
-    };
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); window.removeEventListener("mousemove", onMouse); };
   }, [evolved]);
 
   return (
     <>
-      <style>{`
-        * { cursor: none !important; }
-        .cursor-overlay {
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          z-index: 9999;
-        }
-      `}</style>
+      <style>{`*{cursor:none!important}.cursor-overlay{position:fixed;inset:0;pointer-events:none;z-index:9999;}`}</style>
       <canvas ref={canvasRef} className="cursor-overlay" />
     </>
   );

@@ -109,7 +109,7 @@ export function CampusSounds() {
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     const schedule = () => {
-      const delay = 30000 + Math.random() * 60000;
+      const delay = 60000 + Math.random() * 120000;
       const timer = setTimeout(() => {
         if (!ctxRef.current) ctxRef.current = new AudioContext();
         const type = types[Math.floor(Math.random() * types.length)];

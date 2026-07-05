@@ -30,7 +30,7 @@ export function DreamMode() {
         speak("I have replayed these memories thousands of times. Every replay feels different.", { rate: 0.78 });
       }, 3000);
       return () => clearTimeout(t);
-    }, 1200000);
+    }, 1800000);
 
     return () => clearTimeout(timerRef.current);
   }, [active]);
@@ -42,7 +42,7 @@ export function DreamMode() {
       setShowWhisper(true);
       const t = setTimeout(() => setShowWhisper(false), 4000);
       return () => clearTimeout(t);
-    }, 15000);
+    }, 30000);
     return () => clearInterval(whisperTimerRef.current);
   }, [active]);
 
