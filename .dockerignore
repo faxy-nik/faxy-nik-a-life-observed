@@ -1,0 +1,16 @@
+node_modules
+.output
+.vinxi
+.nitro
+.tanstack
+.wrangler
+.git
+.gitattributes
+.gitignore
+*.md
+.gitkeep
+.vscode
+.idea
+*.local
+dist
+dist-ssr
