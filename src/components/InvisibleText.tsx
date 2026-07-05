@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const HIDDEN_MESSAGES = [
   "He remembers more than he admits.",
@@ -29,20 +29,37 @@ const HIDDEN_MESSAGES = [
 ];
 
 export function InvisibleText() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
-      .hidden-message { position: absolute; opacity: 0; pointer-events: none; user-select: text; font-size: 1px; line-height: 1px; width: 0; height: 0; overflow: hidden; }
-      .hidden-message::selection { opacity: 1; background: transparent; color: rgba(255,255,255,0.3); font-size: 10px; }
+      .hidden-message { position: fixed; opacity: 0; pointer-events: none; user-select: text; white-space: nowrap; font-size: 12px; line-height: 1; color: transparent; }
+      .hidden-message::selection { background: rgba(200, 180, 140, 0.2); color: rgba(200, 180, 140, 0.6); }
     `;
     document.head.appendChild(style);
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const spans = container.querySelectorAll<HTMLSpanElement>(".hidden-message");
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    spans.forEach((span, i) => {
+      const col = i % 5;
+      const row = Math.floor(i / 5);
+      span.style.left = `${(col / 5) * vw}px`;
+      span.style.top = `${(row / 5) * vh}px`;
+    });
+
     return () => { document.head.removeChild(style); };
   }, []);
 
   return (
-    <div aria-hidden className="hidden-message-container" style={{ display: "none" }}>
+    <div ref={containerRef} aria-hidden style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
       {HIDDEN_MESSAGES.map((msg, i) => (
-        <span key={i} className="hidden-message" data-index={i}>
+        <span key={i} className="hidden-message">
           {msg}
         </span>
       ))}
