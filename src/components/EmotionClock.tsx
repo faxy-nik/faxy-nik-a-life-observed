@@ -1,12 +1,13 @@
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EMOTIONAL_STATES } from "@/lib/easter-eggs";
 
 export function EmotionClock() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const state = useMemo(() => {
+  const [state, setState] = useState(EMOTIONAL_STATES[0]);
+  useEffect(() => {
     const seed = sessionStorage.getItem("faxy-nik-clock");
     if (!seed) { const s = String(Math.floor(Math.random() * EMOTIONAL_STATES.length)); sessionStorage.setItem("faxy-nik-clock", s); }
-    return EMOTIONAL_STATES[Number(sessionStorage.getItem("faxy-nik-clock") || "0")];
+    setState(EMOTIONAL_STATES[Number(sessionStorage.getItem("faxy-nik-clock") || "0")]);
   }, []);
 
   useEffect(() => {

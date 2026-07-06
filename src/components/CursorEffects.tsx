@@ -3,10 +3,11 @@ import { getVisitCount, getFoundFragments } from "@/lib/easter-eggs";
 
 export function CursorEffects() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [evolved] = useState(() => {
+  const [evolved, setEvolved] = useState(false);
+  useEffect(() => {
     const visits = getVisitCount(); const fragments = getFoundFragments();
-    return visits > 1 || fragments.length > 0;
-  });
+    setEvolved(visits > 1 || fragments.length > 0);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;

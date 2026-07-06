@@ -3,7 +3,8 @@ import { PIANO_NOTES_DATA, MELODY, getPianoNotes, markPianoNoteFound } from "@/l
 import { speak } from "@/lib/narrator";
 
 export function PianoKeys() {
-  const [foundNotes, setFoundNotes] = useState<number[]>(() => getPianoNotes());
+  const [foundNotes, setFoundNotes] = useState<number[]>([]);
+  useEffect(() => { setFoundNotes(getPianoNotes()); }, []);
   const [showMelody, setShowMelody] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -53,13 +54,20 @@ export function PianoKeys() {
   }
 
   const hiddenNotes = PIANO_NOTES_DATA.filter((_, i) => !foundNotes.includes(i));
+  const [dim, setDim] = useState({ w: 800, h: 600 });
+  useEffect(() => {
+    setDim({ w: window.innerWidth, h: window.innerHeight });
+    const onResize = () => setDim({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   if (hiddenNotes.length === 0 && showMelody) return null;
 
   return (
     <>
       {hiddenNotes.map((note, i) => {
         const angle = (i / hiddenNotes.length) * Math.PI * 2;
-        const r = Math.min(window.innerWidth, window.innerHeight) * 0.3;
+        const r = Math.min(dim.w, dim.h) * 0.3;
         const x = 50 + Math.cos(angle) * 25;
         const y = 50 + Math.sin(angle) * 25;
         return (

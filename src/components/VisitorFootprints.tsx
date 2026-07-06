@@ -4,7 +4,8 @@ import { getFootprints, markFootprint } from "@/lib/easter-eggs";
 const SECTION_IDS = ["hero", "who", "stats", "traits", "mind", "people", "timeline", "philosophy", "learned", "mosaic", "letter", "final"];
 
 export function VisitorFootprints() {
-  const [footprints, setFootprints] = useState<string[]>(() => getFootprints());
+  const [footprints, setFootprints] = useState<string[]>([]);
+  useEffect(() => { setFootprints(getFootprints()); }, []);
 
   useEffect(() => {
     const handlers: { id: string; io: IntersectionObserver }[] = [];
