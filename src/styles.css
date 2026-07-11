@@ -269,7 +269,7 @@ html { scroll-behavior: smooth; }
   z-index: 80;
   background: radial-gradient(circle, oklch(1 0 0 / 0.06) 0%, transparent 70%);
   transform: translate(-50%, -50%);
-  transition: opacity 0.3s;
+  transition: transform 0.15s ease-out, opacity 0.3s;
   will-change: transform;
 }
 
@@ -289,7 +289,7 @@ html { scroll-behavior: smooth; }
 .floating-orb {
   position: fixed;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(40px);
   pointer-events: none;
   z-index: 0;
   animation: float-orb var(--orb-duration, 20s) ease-in-out infinite;

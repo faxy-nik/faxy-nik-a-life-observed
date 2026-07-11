@@ -13,14 +13,14 @@ export function CursorEffects() {
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
     let raf = 0, w = 0, h = 0, mx = -100, my = -100, prevMx = -100, prevMy = -100;
-    let hesitating = false, frame = 0;
+    let hesitating = false, frame = 0, lastMove = 0;
     let particles: { x: number; y: number; life: number; maxLife: number; size: number }[] = [];
 
     const resize = () => { w = window.innerWidth; h = window.innerHeight; canvas.width = w; canvas.height = h; };
     resize(); window.addEventListener("resize", resize);
 
     const onMouse = (e: MouseEvent) => {
-      prevMx = mx; prevMy = my; mx = e.clientX; my = e.clientY;
+      prevMx = mx; prevMy = my; mx = e.clientX; my = e.clientY; lastMove = Date.now();
       if (evolved) {
         const speed = Math.hypot(mx - prevMx, my - prevMy);
         if (speed > 0.5 && Math.random() > 0.7) particles.push({ x: mx + (Math.random() - 0.5) * 4, y: my + (Math.random() - 0.5) * 4, life: 0, maxLife: 20 + Math.random() * 30, size: 1 + Math.random() * 1.5 });
@@ -31,7 +31,8 @@ export function CursorEffects() {
 
     const tick = () => {
       raf = requestAnimationFrame(tick); frame++;
-      if (frame % 2 !== 0) return;
+      if (frame % 4 !== 0) return;
+      if (Date.now() - lastMove > 2000) return;
       ctx.clearRect(0, 0, w, h);
       ctx.beginPath(); ctx.arc(mx, my, hesitating ? 3 : 1.5, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255,255,255,${hesitating ? 0.3 : 0.6})`; ctx.fill();

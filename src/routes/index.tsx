@@ -1,9 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import portrait from "@/assets/portrait.jpg";
 import { Particles } from "@/components/Particles";
 import { speak, stopAll, askQuestion } from "@/lib/narrator";
 import { MouseGlow } from "@/components/MouseGlow";
+
+function DeferredMount({ delay, children }: { delay: number; children: React.ReactNode }) {
+  const [mount, setMount] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setMount(true), delay); return () => clearTimeout(t); }, [delay]);
+  return mount ? children : null;
+}
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { FloatingOrbs } from "@/components/FloatingOrbs";
 import { ChapterNav } from "@/components/ChapterNav";
@@ -354,7 +360,7 @@ function TypedLine({ text, delay = 0, onDone }: { text: string; delay?: number; 
           clearInterval(iv);
           onDone?.();
         }
-      }, 25);
+      }, 8);
     }, delay);
     return () => clearTimeout(start);
   }, [text, delay]);
@@ -462,9 +468,15 @@ function Documentary() {
   }, [scrollDepth]);
 
   useEffect(() => {
+    let ticking = false;
     const onScroll = () => {
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollDepth(maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0);
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        setScrollDepth(maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0);
+        ticking = false;
+      });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -656,51 +668,52 @@ function Documentary() {
 
       {phase !== "idle" && (
         <>
-          <MouseGlow />
-          <ScrollProgress />
-          <FloatingOrbs count={6} />
-          <ChapterNav />
-          <DepthIndicator sections={DEPTH_SECTIONS} />
-          <AmbientEqualizer barCount={24} />
-          <FloatingWords />
-          <AmbientSound depth={scrollDepth} />
-          <DeepArchive />
-          <MatrixEasterEgg />
+          <DeferredMount delay={0}><ScrollProgress /></DeferredMount>
+          <DeferredMount delay={0}><MouseGlow /></DeferredMount>
+          <DeferredMount delay={200}><FloatingOrbs count={6} /></DeferredMount>
+          <DeferredMount delay={300}><ChapterNav /></DeferredMount>
+          <DeferredMount delay={300}><DepthIndicator sections={DEPTH_SECTIONS} /></DeferredMount>
+          <DeferredMount delay={400}><AmbientEqualizer barCount={24} /></DeferredMount>
+          <DeferredMount delay={400}><FloatingWords /></DeferredMount>
+          <DeferredMount delay={500}><AmbientSound depth={scrollDepth} /></DeferredMount>
+          <DeferredMount delay={500}><DeepArchive /></DeferredMount>
+          <DeferredMount delay={600}><MatrixEasterEgg /></DeferredMount>
 
-          {/* EASTER EGG LAYER */}
-          <SecretTerminal />
-          <PhilosophyMode />
-          <GlitchEngine />
-          <InvisibleText />
-          <MemoryFragments documentPhase={phase} />
-          <ObservationRoomOverlay visible={observationVisible} onClose={closeObservationRoom} />
-          <VoiceRecognition />
-          <CuriosityTracker />
-          <PianoKeys />
-          <CampusSounds />
-          <HeartBeat />
-          <TheBook />
-          <MemoryRoom />
-          <Library />
-          <Mirror />
-          <FinalMemory />
-          {typeof window !== "undefined" && <ShutdownMessage />}
+          {/* EASTER EGG LAYER — defer further, not needed immediately */}
+          <DeferredMount delay={1000}><SecretTerminal /></DeferredMount>
+          <DeferredMount delay={1000}><PhilosophyMode /></DeferredMount>
+          <DeferredMount delay={1000}><GlitchEngine /></DeferredMount>
+          <DeferredMount delay={1000}><InvisibleText /></DeferredMount>
+          <DeferredMount delay={1000}><MemoryFragments documentPhase={phase} /></DeferredMount>
+          <DeferredMount delay={1200}><VoiceRecognition /></DeferredMount>
+          <DeferredMount delay={1200}><CuriosityTracker /></DeferredMount>
+          <DeferredMount delay={1500}><PianoKeys /></DeferredMount>
+          <DeferredMount delay={1500}><CampusSounds /></DeferredMount>
+          <DeferredMount delay={1500}><HeartBeat /></DeferredMount>
+          <DeferredMount delay={1500}><TheBook /></DeferredMount>
+          <DeferredMount delay={2000}><MemoryRoom /></DeferredMount>
+          <DeferredMount delay={2000}><Library /></DeferredMount>
+          <DeferredMount delay={2000}><Mirror /></DeferredMount>
+          <DeferredMount delay={2000}><FinalMemory /></DeferredMount>
+          <DeferredMount delay={2500}>{typeof window !== "undefined" && <ShutdownMessage />}</DeferredMount>
 
           {/* AMBIENT LAYER */}
-          <EmotionWatcher />
-          <ThreeAMMode />
-          <GlobalColorGrading />
-          <ArchiveAging />
-          <EvolvingHandwriting />
-          <TheSky />
-          <WeatherWindow />
-          <EmotionClock />
-          <MemoryTree />
-          <Shadows />
-          <AmbientLights />
-          <VisitorFootprints />
-          <CursorEffects />
-          <DreamMode />
+          <DeferredMount delay={300}><EmotionWatcher /></DeferredMount>
+          <DeferredMount delay={500}><ThreeAMMode /></DeferredMount>
+          <DeferredMount delay={300}><GlobalColorGrading /></DeferredMount>
+          <DeferredMount delay={500}><ArchiveAging /></DeferredMount>
+          <DeferredMount delay={500}><EvolvingHandwriting /></DeferredMount>
+          <DeferredMount delay={600}><TheSky /></DeferredMount>
+          <DeferredMount delay={600}><WeatherWindow /></DeferredMount>
+          <DeferredMount delay={600}><EmotionClock /></DeferredMount>
+          <DeferredMount delay={600}><MemoryTree /></DeferredMount>
+          <DeferredMount delay={600}><Shadows /></DeferredMount>
+          <DeferredMount delay={700}><AmbientLights /></DeferredMount>
+          <DeferredMount delay={700}><VisitorFootprints /></DeferredMount>
+          <DeferredMount delay={800}><CursorEffects /></DeferredMount>
+          <DeferredMount delay={800}><DreamMode /></DeferredMount>
+
+          <DeferredMount delay={300}><div className="fixed inset-0 pointer-events-none z-0"><Particles density={25} speed={2} lateNight={lateNight} /></div></DeferredMount>
         </>
       )}
 
@@ -868,8 +881,7 @@ function Documentary() {
         </section>
       )}
 
-      {/* FIXED AMBIENT PARTICLES */}
-      {phase !== "idle" && <div className="fixed inset-0 pointer-events-none z-0"><Particles density={25} speed={2} lateNight={lateNight} /></div>}
+
 
       {/* HERO */}
       <Section id="hero" className="text-center">
