@@ -653,16 +653,56 @@ function Documentary() {
     <main className={`relative bg-black text-white vignette ${phase === "narrating" ? "breathing-page" : ""}`}>
       <div className="grain" aria-hidden />
       <div className="starfield-layer" aria-hidden />
-      <MouseGlow />
-      <ScrollProgress />
-      <FloatingOrbs count={6} />
-      <ChapterNav />
-      <DepthIndicator sections={DEPTH_SECTIONS} />
-      <AmbientEqualizer barCount={24} />
-      <FloatingWords />
-      <AmbientSound depth={scrollDepth} />
-      <DeepArchive />
-      <MatrixEasterEgg />
+
+      {phase !== "idle" && (
+        <>
+          <MouseGlow />
+          <ScrollProgress />
+          <FloatingOrbs count={6} />
+          <ChapterNav />
+          <DepthIndicator sections={DEPTH_SECTIONS} />
+          <AmbientEqualizer barCount={24} />
+          <FloatingWords />
+          <AmbientSound depth={scrollDepth} />
+          <DeepArchive />
+          <MatrixEasterEgg />
+
+          {/* EASTER EGG LAYER */}
+          <SecretTerminal />
+          <PhilosophyMode />
+          <GlitchEngine />
+          <InvisibleText />
+          <MemoryFragments documentPhase={phase} />
+          <ObservationRoomOverlay visible={observationVisible} onClose={closeObservationRoom} />
+          <VoiceRecognition />
+          <CuriosityTracker />
+          <PianoKeys />
+          <CampusSounds />
+          <HeartBeat />
+          <TheBook />
+          <MemoryRoom />
+          <Library />
+          <Mirror />
+          <FinalMemory />
+          {typeof window !== "undefined" && <ShutdownMessage />}
+
+          {/* AMBIENT LAYER */}
+          <EmotionWatcher />
+          <ThreeAMMode />
+          <GlobalColorGrading />
+          <ArchiveAging />
+          <EvolvingHandwriting />
+          <TheSky />
+          <WeatherWindow />
+          <EmotionClock />
+          <MemoryTree />
+          <Shadows />
+          <AmbientLights />
+          <VisitorFootprints />
+          <CursorEffects />
+          <DreamMode />
+        </>
+      )}
 
       <button
         onClick={() => {
@@ -676,41 +716,6 @@ function Documentary() {
       >
         {shareCopied ? "\u2726 copied" : "\u2726 share"}
       </button>
-
-      {/* EASTER EGG LAYER */}
-      <SecretTerminal />
-      <PhilosophyMode />
-      <GlitchEngine />
-      <InvisibleText />
-      <MemoryFragments documentPhase={phase} />
-      <ObservationRoomOverlay visible={observationVisible} onClose={closeObservationRoom} />
-      <VoiceRecognition />
-      <CuriosityTracker />
-      <PianoKeys />
-      <CampusSounds />
-      <HeartBeat />
-      <TheBook />
-      <MemoryRoom />
-      <Library />
-      <Mirror />
-      <FinalMemory />
-      {typeof window !== "undefined" && <ShutdownMessage />}
-
-      {/* AMBIENT LAYER */}
-      <EmotionWatcher />
-      <ThreeAMMode />
-      <GlobalColorGrading />
-      <ArchiveAging />
-      <EvolvingHandwriting />
-      <TheSky />
-      <WeatherWindow />
-      <EmotionClock />
-      <MemoryTree />
-      <Shadows />
-      <AmbientLights />
-      <VisitorFootprints />
-      <CursorEffects />
-      <DreamMode />
 
       {/* Visit message */}
       {showVisitMessage && visitCount > 0 && (
@@ -864,7 +869,7 @@ function Documentary() {
       )}
 
       {/* FIXED AMBIENT PARTICLES */}
-      <div className="fixed inset-0 pointer-events-none z-0"><Particles density={25} speed={2} lateNight={lateNight} /></div>
+      {phase !== "idle" && <div className="fixed inset-0 pointer-events-none z-0"><Particles density={25} speed={2} lateNight={lateNight} /></div>}
 
       {/* HERO */}
       <Section id="hero" className="text-center">
