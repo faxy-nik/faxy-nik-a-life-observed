@@ -98,13 +98,30 @@ function createAmbient(ctx: AudioContext) {
   };
 }
 
-export function AmbientSound({ depth = 0 }: { depth?: number }) {
+export function AmbientSound() {
   const [active, setActive] = useState(false);
   const ambientRef = useRef<ReturnType<typeof createAmbient> | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
-  const depthRef = useRef(depth);
+  const depthRef = useRef(0);
 
-  useEffect(() => { depthRef.current = depth; }, [depth]);
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        const currentDepth = maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0;
+        depthRef.current = currentDepth;
+        if (ambientRef.current && active) {
+          ambientRef.current.setDepth(currentDepth);
+        }
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [active]);
 
   const toggle = useCallback(() => {
     if (active && ambientRef.current) {
@@ -130,11 +147,7 @@ export function AmbientSound({ depth = 0 }: { depth?: number }) {
     }
   }, [active]);
 
-  useEffect(() => {
-    if (active && ambientRef.current) {
-      ambientRef.current.setDepth(depth);
-    }
-  }, [depth, active]);
+
 
   useEffect(() => {
     return () => {

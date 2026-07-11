@@ -13,7 +13,7 @@ export function CursorEffects() {
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
     let raf = 0, w = 0, h = 0, mx = -100, my = -100, prevMx = -100, prevMy = -100;
-    let hesitating = false, frame = 0, lastMove = 0;
+    let hesitating = false, lastMove = 0;
     let particles: { x: number; y: number; life: number; maxLife: number; size: number }[] = [];
 
     const resize = () => { w = window.innerWidth; h = window.innerHeight; canvas.width = w; canvas.height = h; };
@@ -30,8 +30,7 @@ export function CursorEffects() {
     window.addEventListener("mousemove", onMouse);
 
     const tick = () => {
-      raf = requestAnimationFrame(tick); frame++;
-      if (frame % 4 !== 0) return;
+      raf = requestAnimationFrame(tick);
       if (Date.now() - lastMove > 2000) return;
       ctx.clearRect(0, 0, w, h);
       ctx.beginPath(); ctx.arc(mx, my, hesitating ? 3 : 1.5, 0, Math.PI * 2);
@@ -53,7 +52,7 @@ export function CursorEffects() {
 
   return (
     <>
-      <style>{`*{cursor:none!important}.cursor-overlay{position:fixed;inset:0;pointer-events:none;z-index:9999;}`}</style>
+      <style>{`.cursor-overlay{position:fixed;inset:0;pointer-events:none;z-index:9999;}`}</style>
       <canvas ref={canvasRef} className="cursor-overlay" />
     </>
   );

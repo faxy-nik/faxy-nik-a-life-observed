@@ -373,7 +373,6 @@ function Documentary() {
   const [glitch, setGlitch] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
   const [quoteIdx, setQuoteIdx] = useState(0);
-  const [scrollDepth, setScrollDepth] = useState(0);
   const [constellationHovered, setConstellationHovered] = useState(false);
   const [thinkingVisible, setThinkingVisible] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -458,28 +457,33 @@ function Documentary() {
   }, []);
 
   useEffect(() => {
-    if (scrollDepth >= 1) {
-      bottomTimerRef.current = setTimeout(() => setBottomLog(true), 10000);
-    } else {
-      clearTimeout(bottomTimerRef.current);
-      setBottomLog(false);
-    }
-    return () => clearTimeout(bottomTimerRef.current);
-  }, [scrollDepth]);
-
-  useEffect(() => {
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
         const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        setScrollDepth(maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0);
+        const currentScrollDepth = maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0;
+        
+        if (currentScrollDepth >= 1) {
+          if (!bottomTimerRef.current) {
+            bottomTimerRef.current = setTimeout(() => setBottomLog(true), 10000);
+          }
+        } else {
+          if (bottomTimerRef.current) {
+            clearTimeout(bottomTimerRef.current);
+            bottomTimerRef.current = undefined;
+            setBottomLog(false);
+          }
+        }
         ticking = false;
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (bottomTimerRef.current) clearTimeout(bottomTimerRef.current);
+    };
   }, []);
 
   // Visit tracking
@@ -562,19 +566,7 @@ function Documentary() {
     };
   }, [phase]);
 
-  // Breathing effect via CSS
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.textContent = `
-      .breathing-page { animation: breathe-page 6s ease-in-out infinite; }
-      @keyframes breathe-page {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.005); }
-      }
-    `;
-    document.head.appendChild(style);
-    return () => { document.head.removeChild(style); };
-  }, []);
+
 
   useEffect(() => {
     if (phase !== "narrating") return;
@@ -662,7 +654,7 @@ function Documentary() {
   const lateNight = showMidnight;
 
   return (
-    <main className={`relative bg-black text-white vignette ${phase === "narrating" ? "breathing-page" : ""}`}>
+    <main className={`relative bg-black text-white vignette`}>
       <div className="grain" aria-hidden />
       <div className="starfield-layer" aria-hidden />
 
@@ -675,7 +667,7 @@ function Documentary() {
           <DeferredMount delay={300}><DepthIndicator sections={DEPTH_SECTIONS} /></DeferredMount>
           <DeferredMount delay={400}><AmbientEqualizer barCount={24} /></DeferredMount>
           <DeferredMount delay={400}><FloatingWords /></DeferredMount>
-          <DeferredMount delay={500}><AmbientSound depth={scrollDepth} /></DeferredMount>
+          <DeferredMount delay={500}><AmbientSound /></DeferredMount>
           <DeferredMount delay={500}><DeepArchive /></DeferredMount>
           <DeferredMount delay={600}><MatrixEasterEgg /></DeferredMount>
 
