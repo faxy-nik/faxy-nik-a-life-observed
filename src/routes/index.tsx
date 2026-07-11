@@ -355,12 +355,12 @@ function TypedLine({ text, delay = 0, onDone }: { text: string; delay?: number; 
       const iv = setInterval(() => {
         i++;
         setShown(text.slice(0, i));
-        if (i % 2 === 0) playTypingSound();
+        if (i % 3 === 0) playTypingSound();
         if (i >= text.length) {
           clearInterval(iv);
           onDone?.();
         }
-      }, 8);
+      }, 25);
     }, delay);
     return () => clearTimeout(start);
   }, [text, delay]);
@@ -629,7 +629,10 @@ function Documentary() {
     const t2 = setTimeout(() => {
       setGlitch(false);
       setPhase("narrating");
+      let narrateCalled = false;
       const doNarrate = () => {
+        if (narrateCalled) return;
+        narrateCalled = true;
         speak(
           "I have analyzed millions of humans. Millions of conversations. Millions of emotions. Millions of memories. Most disappear into statistics. This one... did not. Welcome. This is not the story of a successful person. Nor an unsuccessful one. This is the story of someone who remembers people differently.",
           { rate: 0.82 }
@@ -637,6 +640,7 @@ function Documentary() {
       };
       if (window.speechSynthesis && window.speechSynthesis.getVoices().length === 0) {
         window.speechSynthesis.onvoiceschanged = doNarrate;
+        setTimeout(doNarrate, 1000);
       } else {
         doNarrate();
       }
@@ -658,7 +662,7 @@ function Documentary() {
       <div className="grain" aria-hidden />
       <div className="starfield-layer" aria-hidden />
 
-      {phase !== "idle" && (
+      {phase === "narrating" && (
         <>
           <DeferredMount delay={0}><ScrollProgress /></DeferredMount>
           <DeferredMount delay={0}><MouseGlow /></DeferredMount>
