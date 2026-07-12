@@ -369,7 +369,7 @@ function TypedLine({ text, delay = 0, onDone }: { text: string; delay?: number; 
 
 function Documentary() {
   const [phase, setPhase] = useState<"idle" | "booting" | "narrating">("idle");
-  const [bootIndex, setBootIndex] = useState(0);
+  const [bootIndex, setBootIndex] = useState(0); console.log('bootIndex initial', bootIndex);
   const [glitch, setGlitch] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
   const [quoteIdx, setQuoteIdx] = useState(0);
@@ -611,19 +611,42 @@ function Documentary() {
     return () => clearTimeout(timeout);
   }, [phase]);
 
-  useEffect(() => {
-    const iv = setInterval(() => setQuoteIdx((i) => (i + 1) % QUOTE_CAROUSEL.length), 6000);
-    return () => clearInterval(iv);
-  }, []);
+    useEffect(() => {
+        const iv = setInterval(() => setQuoteIdx((i) => (i + 1) % QUOTE_CAROUSEL.length), 6000);
+        return () => clearInterval(iv);
+    }, []);
 
-  const begin = () => {
+  const begin = () => { console.log('Begin button clicked');
     playBeginSound();
     setPhase("booting");
   };
 
+  // Auto‑start booting if user hasn’t clicked after a short delay
+  useEffect(() => {
+    if (phase !== "idle") return;
+    const timer = setTimeout(() => {
+      console.log('Auto‑starting boot sequence');
+      setPhase("booting");
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+
+  // Debug: log phase changes
+  useEffect(() => {
+    console.log('[DEBUG] Phase changed to', phase);
+  }, [phase]);
+
+  // Debug: log bootIndex updates
+  useEffect(() => {
+    console.log('[DEBUG] bootIndex updated to', bootIndex);
+  }, [bootIndex]);
+
+  // When booting finishes, play sound and transition to narration
   useEffect(() => {
     if (phase !== "booting") return;
-    if (bootIndex < BOOT_LINES.length) return;
+    // Wait until the last boot line has been shown
+    if (bootIndex < BOOT_LINES.length - 1) return;
     playBootCompleteSound();
     const t1 = setTimeout(() => setGlitch(true), 400);
     const t2 = setTimeout(() => {
@@ -656,6 +679,16 @@ function Documentary() {
   }, [selectedPerson]);
 
   const lateNight = showMidnight;
+
+  // Fallback: if booting hangs, force transition after 20 s
+  useEffect(() => {
+    if (phase !== "booting") return;
+    const fallback = setTimeout(() => {
+      console.warn("Boot timeout reached – forcing narrating phase");
+      setPhase("narrating");
+    }, 20000);
+    return () => clearTimeout(fallback);
+  }, [phase]);
 
   return (
     <main className={`relative bg-black text-white vignette`}>
@@ -858,18 +891,18 @@ function Documentary() {
                   <TypedLine
                     key={i}
                     text={line}
-                    delay={i === bootIndex ? 0 : 0}
-                    onDone={i === bootIndex ? () => setTimeout(() => setBootIndex((b) => b + 1), 250) : undefined}
+                    delay={0}
+                    onDone={i === bootIndex && bootIndex < BOOT_LINES.length ? () => { console.log("Transitioning boot index:", bootIndex); setTimeout(() => setBootIndex((b) => b + 1), 250); } : undefined}
                   />
                 ))}
                 <div className="mt-4 h-px bg-white/10 overflow-hidden rounded-full">
                   <div
                     className="h-full bg-gradient-to-r from-white/30 to-white transition-all duration-300 rounded-full"
-                    style={{ width: `${((bootIndex + 1) / BOOT_LINES.length) * 100}%` }}
+                    style={{ width: `${(Math.min(bootIndex + 1, BOOT_LINES.length) / BOOT_LINES.length) * 100}%` }}
                   />
                 </div>
                 <div className="mono text-[9px] text-white/20 mt-2">
-                  {Math.round(((bootIndex + 1) / BOOT_LINES.length) * 100)}% complete
+                  {Math.round((Math.min(bootIndex + 1, BOOT_LINES.length) / BOOT_LINES.length) * 100)}% complete
                 </div>
               </div>
             )}
